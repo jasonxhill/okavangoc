@@ -30,6 +30,7 @@ static void testAppendString();
 static void testInMemoryCharStream();
 static void testTokenStreamEOF();
 static void testTokenStream();
+static void testQuotedString();
 
 int main(const int argc, const char* const argv[])
 {
@@ -38,6 +39,7 @@ int main(const int argc, const char* const argv[])
   TEST(testInMemoryCharStream);
   TEST(testTokenStreamEOF);
   TEST(testTokenStream);
+  TEST(testQuotedString);
   return EXIT_SUCCESS;
 }
 
@@ -145,5 +147,48 @@ static void testTokenStream()
     InMemoryCharStream istream = getInMemoryCharStream("ABC_DE");
     TokenStream stream = getTokenStream(&(istream.stream));
     deleteString(assertEquals("ABC_DE", stream.next(&stream)));
+  }
+}
+
+static void testQuotedString()
+{
+  {
+    InMemoryCharStream istream = getInMemoryCharStream("B \"3 & ^ 5\" xp ");
+    TokenStream stream = getTokenStream(&(istream.stream));
+    deleteString(assertEquals("B", stream.next(&stream)));
+    deleteString(assertEquals("\"3 & ^ 5\"", stream.next(&stream)));
+    deleteString(assertEquals("xp", stream.next(&stream)));
+  }
+  {
+    InMemoryCharStream istream = getInMemoryCharStream("B '3 $%5' xp ");
+    TokenStream stream = getTokenStream(&(istream.stream));
+    deleteString(assertEquals("B", stream.next(&stream)));
+    deleteString(assertEquals("'3 $%5'", stream.next(&stream)));
+    deleteString(assertEquals("xp", stream.next(&stream)));
+  }
+  {
+    InMemoryCharStream istream = getInMemoryCharStream(" ARYr `3 $%5` Xp ");
+    TokenStream stream = getTokenStream(&(istream.stream));
+    deleteString(assertEquals("ARYr", stream.next(&stream)));
+    deleteString(assertEquals("`3 $%5`", stream.next(&stream)));
+    deleteString(assertEquals("Xp", stream.next(&stream)));
+  }
+  {
+    InMemoryCharStream istream = getInMemoryCharStream("\"3 & ^ 5\" xp ");
+    TokenStream stream = getTokenStream(&(istream.stream));
+    deleteString(assertEquals("\"3 & ^ 5\"", stream.next(&stream)));
+    deleteString(assertEquals("xp", stream.next(&stream)));
+  }
+  {
+    InMemoryCharStream istream = getInMemoryCharStream("B \"3 & ^ 5\"");
+    TokenStream stream = getTokenStream(&(istream.stream));
+    deleteString(assertEquals("B", stream.next(&stream)));
+    deleteString(assertEquals("\"3 & ^ 5\"", stream.next(&stream)));
+  }
+  {
+    InMemoryCharStream istream = getInMemoryCharStream("B \"3 & ^ 5");
+    TokenStream stream = getTokenStream(&(istream.stream));
+    deleteString(assertEquals("B", stream.next(&stream)));
+    deleteString(assertEquals("\"3 & ^ 5", stream.next(&stream)));
   }
 }
