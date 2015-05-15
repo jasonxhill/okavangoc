@@ -5,14 +5,14 @@
 
 STRUCT {
   string str;
-  unsigned int size;
+  unsigned long size;
 } String;
 
 String toString(const character*);
-String newString(unsigned int size);
-String copyString(const String, unsigned int size);
+String newString(unsigned long size);
+String copyString(const String, unsigned long size);
 String concatString(const String, const String);
-String appendChar(String, const character, unsigned int increaseBy);
+String appendChar(String, const character, unsigned long increaseBy);
 String joinStrings(const String, const String);
 String trimString(String);
 void deleteString(String);

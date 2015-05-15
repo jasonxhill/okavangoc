@@ -8,7 +8,7 @@ String toString(const character* c)
   return s;
 }
 
-String newString(const unsigned int size)
+String newString(const unsigned long size)
 {
   String str = {
     .str = calloc(size + 1, sizeof(character)),
@@ -18,9 +18,9 @@ String newString(const unsigned int size)
   return str;
 }
 
-String copyString(const String str, const unsigned int size)
+String copyString(const String str, const unsigned long size)
 {
-  const unsigned int len = strlen(str.str);
+  const unsigned long len = strlen(str.str);
 
   String copy = {
     .str = strncpy(calloc(size, sizeof(character)), str.str, len < size? len : size),
@@ -37,9 +37,9 @@ String concatString(const String a, const String b)
   return copy;
 }
 
-String appendChar(String s, const character c, const unsigned int increaseBy)
+String appendChar(String s, const character c, const unsigned long increaseBy)
 {
-  const unsigned int used = strlen(s.str);
+  const unsigned long used = strlen(s.str);
 
   if(used < s.size)
   {

@@ -30,7 +30,7 @@ static int containsChar(const character c, const character* const list)
 static String next(TokenStream* const stream)
 {
   static character* whitespace = " \n\r\t";
-  static const unsigned int bufferSize = 256;
+  static const unsigned long bufferSize = 256;
   String buffer = newString(bufferSize);
 
   character c;
