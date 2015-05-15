@@ -1,6 +1,7 @@
 #include "TokenStream.h"
 
 #define NO_CHAR 0
+#define IS_EMPTY(S) (S.str[0] == NO_CHAR)
 
 static String next(TokenStream* const stream);
 
@@ -28,7 +29,6 @@ static int containsChar(const character c, const character* const list)
 
 static String next(TokenStream* const stream)
 {
-  static character* specialChars = "~!@#$%^&*()-+={}[]|\\/:;?,.<>";
   static character* whitespace = " \n\r\t";
   static const unsigned int bufferSize = 256;
   String buffer = newString(bufferSize);
@@ -36,11 +36,6 @@ static String next(TokenStream* const stream)
   character c;
 
   for(c = stream->lastChar == NO_CHAR? NEXTC : stream->lastChar; containsChar(c, whitespace); c = NEXTC);
-
-  stream->lastChar = NO_CHAR;
-
-  if(containsChar(c, specialChars) == 1)
-    return trimString(appendChar(buffer, c, 0));
 
   for(;c != END_STREAM; c = NEXTC)
     if(c >= 'a' && c <= 'z')
@@ -50,10 +45,14 @@ static String next(TokenStream* const stream)
     else if(c =='_')
       buffer = appendChar(buffer, c, bufferSize);
     else
-    {
-      stream->lastChar = c;
       break;
-    }
 
+  if(IS_EMPTY(buffer))
+  {
+    stream->lastChar = NO_CHAR;
+    return trimString(appendChar(buffer, c, 0));
+  }
+
+  stream->lastChar = c;
   return trimString(buffer);
 }
