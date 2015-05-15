@@ -3,6 +3,14 @@
 #include <assert.h>
 #include "../src/SyntaxTree.h"
 
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_BLUE    "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN    "\x1b[36m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
+
 #define TEST(METHOD) printf("[Running Test %s]\n", #METHOD); METHOD()
 
 static String _assertEquals(const string a, const String b, const char* const file, const unsigned int line)
@@ -10,12 +18,8 @@ static String _assertEquals(const string a, const String b, const char* const fi
   if(strcmp(a, b.str) == 0)
     return b;
 
-  String s = toString("assertEquals expected [");
-  s = joinStrings(joinStrings(s, toString(a)), toString("] actual ["));
-  s = joinStrings(joinStrings(s, b), toString("]"));
-  _assert(s.str, file, line);
-  deleteString(s);
-  return b;
+  printf(ANSI_COLOR_RED "[assertEquals] expected [%s] actual [%s] @ file: %s line: %i\n" ANSI_COLOR_RESET, a, b.str, file, line);
+  exit(EXIT_FAILURE);
 }
 
 #define assertEquals(A, B) _assertEquals(A, B, __FILE__,__LINE__)
@@ -24,6 +28,7 @@ static String _assertEquals(const string a, const String b, const char* const fi
 static void testCopyString();
 static void testAppendString();
 static void testInMemoryCharStream();
+static void testTokenStreamEOF();
 static void testTokenStream();
 
 int main(const int argc, const char* const argv[])
@@ -31,6 +36,7 @@ int main(const int argc, const char* const argv[])
   TEST(testCopyString);
   TEST(testAppendString);
   TEST(testInMemoryCharStream);
+  TEST(testTokenStreamEOF);
   TEST(testTokenStream);
   return EXIT_SUCCESS;
 }
@@ -82,6 +88,22 @@ static void testInMemoryCharStream()
   assert(NEXT(stream) == '!');
   assert(NEXT(stream) == END_STREAM);
   assert(NEXT(stream) == END_STREAM);
+}
+
+static void testTokenStreamEOF()
+{
+  {
+    InMemoryCharStream istream = getInMemoryCharStream("a !! test stream");
+    TokenStream stream = getTokenStream(&(istream.stream));
+    String s;
+
+    int i = 0;
+
+    while((s = stream.next(&stream)).str[0] != END_STREAM) {
+      deleteString(s);
+      assert(i++ < 10);
+    }
+  }
 }
 
 static void testTokenStream()

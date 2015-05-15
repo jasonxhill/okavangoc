@@ -4,10 +4,18 @@ srcdir:=src
 tstdir:=test
 outputdir:=debug
 target:=okavangoc
-targetExtension:=.exe
 srcmain:=main.o
 srcfiles=$(wildcard $(srcdir)/*.c)
 tstfiles=$(wildcard $(tstdir)/*.c)
+
+uname:=$(shell uname -s)
+
+ifeq ($(uname),Darwin)
+  targetExtension:=.app
+endif
+
+targetExtension?=.exe
+
 targetPath:=$(outputdir)/$(target)$(targetExtension)
 testTargetPath:=$(outputdir)/$(target)-test$(target-extension)$(targetExtension)
 
