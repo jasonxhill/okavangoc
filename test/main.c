@@ -111,42 +111,54 @@ static void testTokenStreamEOF()
 static void testTokenStream()
 {
   {
-    InMemoryCharStream istream = getInMemoryCharStream("a test stream");
+    InMemoryCharStream istream = getInMemoryCharStream("a test stream 100");
     TokenStream stream = getTokenStream(&(istream.stream));
     deleteString(assertEquals("a", stream.next(&stream)));
     deleteString(assertEquals("test", stream.next(&stream)));
     deleteString(assertEquals("stream", stream.next(&stream)));
+    deleteString(assertEquals("100", stream.next(&stream)));
     deleteString(assertEquals("", stream.next(&stream)));
     deleteString(assertEquals("", stream.next(&stream)));
   }
   {
-    InMemoryCharStream istream = getInMemoryCharStream(" a $ test ^ stream }");
+    InMemoryCharStream istream = getInMemoryCharStream(" a & test ^^ stream1 100.0f}");
     TokenStream stream = getTokenStream(&(istream.stream));
     deleteString(assertEquals("a", stream.next(&stream)));
-    deleteString(assertEquals("$", stream.next(&stream)));
+    deleteString(assertEquals("&", stream.next(&stream)));
     deleteString(assertEquals("test", stream.next(&stream)));
-    deleteString(assertEquals("^", stream.next(&stream)));
-    deleteString(assertEquals("stream", stream.next(&stream)));
+    deleteString(assertEquals("^^", stream.next(&stream)));
+    deleteString(assertEquals("stream1", stream.next(&stream)));
+    deleteString(assertEquals("100.0f", stream.next(&stream)));
     deleteString(assertEquals("}", stream.next(&stream)));
     deleteString(assertEquals("", stream.next(&stream)));
     deleteString(assertEquals("", stream.next(&stream)));
   }
   {
-    InMemoryCharStream istream = getInMemoryCharStream(" a$test^\tstream\n\r} ");
+    InMemoryCharStream istream = getInMemoryCharStream(" a $test^\t1stream\n\r} ");
     TokenStream stream = getTokenStream(&(istream.stream));
     deleteString(assertEquals("a", stream.next(&stream)));
-    deleteString(assertEquals("$", stream.next(&stream)));
-    deleteString(assertEquals("test", stream.next(&stream)));
+    deleteString(assertEquals("$test", stream.next(&stream)));
     deleteString(assertEquals("^", stream.next(&stream)));
-    deleteString(assertEquals("stream", stream.next(&stream)));
+    deleteString(assertEquals("1stream", stream.next(&stream)));
     deleteString(assertEquals("}", stream.next(&stream)));
     deleteString(assertEquals("", stream.next(&stream)));
     deleteString(assertEquals("", stream.next(&stream)));
   }
   {
-    InMemoryCharStream istream = getInMemoryCharStream("ABC_DE");
+    InMemoryCharStream istream = getInMemoryCharStream("ABC_DE $$ ABC_DE$$ ");
     TokenStream stream = getTokenStream(&(istream.stream));
     deleteString(assertEquals("ABC_DE", stream.next(&stream)));
+    deleteString(assertEquals("$$", stream.next(&stream)));
+    deleteString(assertEquals("ABC_DE$$", stream.next(&stream)));
+    deleteString(assertEquals("", stream.next(&stream)));
+  }
+  {
+    InMemoryCharStream istream = getInMemoryCharStream("GH.J->u.u.r ");
+    TokenStream stream = getTokenStream(&(istream.stream));
+    deleteString(assertEquals("GH.J", stream.next(&stream)));
+    deleteString(assertEquals("->", stream.next(&stream)));
+    deleteString(assertEquals("u.u.r", stream.next(&stream)));
+    deleteString(assertEquals("", stream.next(&stream)));
   }
 }
 
