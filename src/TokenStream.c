@@ -17,13 +17,13 @@ TokenStream getTokenStream(CharStream* const charStream)
   return tokenStream;
 }
 
-static int containsChar(const character c, const character* const list)
+static BOOL containsChar(const character c, const character* const list)
 {
   for(const character* i = list; *i != 0; i++)
     if(c == *i)
-      return 1;
+      return TRUE;
 
-  return 0;
+  return FALSE;
 }
 
 #define NEXTC NEXT(stream->charStream)
@@ -64,13 +64,22 @@ static String next(TokenStream* const stream)
 static String getQuotedString(TokenStream* const stream, const character quoteChar, String buffer)
 {
   buffer = appendChar(buffer, quoteChar, bufferSize);
+  BOOL escaped = 0;
   
-  for(character c = NEXTC; c != END_STREAM; c = NEXTC)
+  for(character c = NEXTC, last = quoteChar; c != END_STREAM; last = c, c = NEXTC)
   {
     buffer = appendChar(buffer, c, bufferSize);
     
-    if(c == quoteChar)
+    if(c == '\\')
+    {
+      escaped = !escaped;
+      continue;
+    }
+    
+    if(c == quoteChar && escaped != TRUE)
       break;
+    
+    escaped = FALSE;
   }
   
   return trimString(buffer);

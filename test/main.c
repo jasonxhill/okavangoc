@@ -191,4 +191,18 @@ static void testQuotedString()
     deleteString(assertEquals("B", stream.next(&stream)));
     deleteString(assertEquals("\"3 & ^ 5", stream.next(&stream)));
   }
+  {
+    InMemoryCharStream istream = getInMemoryCharStream("B \"3 & ^ \\\"5\\\" \" xp ");
+    TokenStream stream = getTokenStream(&(istream.stream));
+    deleteString(assertEquals("B", stream.next(&stream)));
+    deleteString(assertEquals("\"3 & ^ \\\"5\\\" \"", stream.next(&stream)));
+    deleteString(assertEquals("xp", stream.next(&stream)));
+  }
+  {
+    InMemoryCharStream istream = getInMemoryCharStream("B \"3 & ^ \\\"5\\\" \\\\\" xp ");
+    TokenStream stream = getTokenStream(&(istream.stream));
+    deleteString(assertEquals("B", stream.next(&stream)));
+    deleteString(assertEquals("\"3 & ^ \\\"5\\\" \\\\\"", stream.next(&stream)));
+    deleteString(assertEquals("xp", stream.next(&stream)));
+  }
 }
