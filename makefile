@@ -33,12 +33,15 @@ build: compile
 	$(eval testObjects=$(wildcard $(outputdir)/$(tstdir)/*.o))
 	$(link) -o $(testTargetPath) $(srcObjects) $(testObjects)
 
-compile:
-	mkdir -p $(outputdir)/$(srcdir)
-	$(foreach i,$(srcfiles),$(cc) $(patsubst $(srcdir)/%.c,$(outputdir)/$(srcdir)/%.o,$(i)) $(i);)
-	
-	mkdir -p $(outputdir)/$(tstdir)
-	$(foreach i,$(tstfiles),$(cc) $(patsubst $(tstdir)/%.c,$(outputdir)/$(tstdir)/%.o,$(i)) $(i);)
+compile: makedirs $(patsubst %.c,$(outputdir)/%.o,$(srcfiles) $(tstfiles))
+
+$(outputdir)/%.o: $(patsubst %.o,%.c,%.o)
+	$(cc) $@ $^
+
+makedirs: $(patsubst %,_MAKE_DIR_%,$(sort $(dir $(wildcard $(srcdir)/*/) $(wildcard $(tstdir)/*/))))
+
+_MAKE_DIR_%:
+	mkdir -p $(patsubst _MAKE_DIR_%, $(outputdir)/%, $@)
 
 .PHONY: clean
 clean:
