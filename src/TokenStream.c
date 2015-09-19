@@ -1,16 +1,22 @@
+//=============================================================================
+// TokenStream.h
+//=============================================================================
 #include "TokenStream.h"
-
+//-----------------------------------------------------------------------------
 #define NO_CHAR 0
 #define NEXTC NEXT(stream->charStream)
-
-static String next(TokenStream* stream);
-static String getQuotedString(TokenStream* stream, character quoteChar, String buffer);
-static BOOL containsChar(const character c, const character* const list);
-inline static BOOL isWhitespace(const character c);
-inline static BOOL isAlpha(const character c);
-inline static BOOL isNumber(const character c);
-
-TokenStream getTokenStream(CharStream* const charStream)
+//-----------------------------------------------------------------------------
+static const unsigned long bufferSize = 256;
+//-----------------------------------------------------------------------------
+static String next(AutoReleasePool*, TokenStream*);
+static String nextWithRelease(AutoReleasePool*, AutoReleasePool*, TokenStream*);
+static String getQuotedString(AutoReleasePool*, TokenStream*, CHAR quoteChar, String buffer);
+static BOOL containsChar(const CHAR, const string);
+static BOOL isWhitespace(const CHAR);
+static BOOL isAlpha(const CHAR);
+static BOOL isNumber(const CHAR);
+//-----------------------------------------------------------------------------
+TokenStream newTokenStream(CharStream* const charStream)
 {
   TokenStream tokenStream = {
     .next = *next,
@@ -20,72 +26,81 @@ TokenStream getTokenStream(CharStream* const charStream)
 
   return tokenStream;
 }
-
-static const unsigned long bufferSize = 256;
-
-#define CHECK_RESULTS       \
-if(buffer.str[0] != NO_CHAR)\
-{                           \
-  stream->lastChar = c;     \
-  return trimString(buffer);\
+//-----------------------------------------------------------------------------
+#define CHECK_RESULTS                         \
+if(buffer.str[0] != NO_CHAR)                  \
+{                                             \
+  stream->lastChar = c;                       \
+  return trimStringToSize(parentPool, buffer);\
 }
-
-static String next(TokenStream* const stream)
+//-----------------------------------------------------------------------------
+static String next(AutoReleasePool* const parentPool, TokenStream* const stream)
 {
-  String buffer = newString(bufferSize);
-  character c;
+  AutoReleasePool pool = newAutoReleasePool();
+  String result = nextWithRelease(parentPool, &pool, stream);
+  pool.drain(&pool);
+  return result;
+}
+//-----------------------------------------------------------------------------
+static String nextWithRelease(AutoReleasePool* const parentPool, AutoReleasePool* const pool,  TokenStream* const stream)
+{
+  String buffer = newString(pool, bufferSize);
+  CHAR c;
 
   for(c = stream->lastChar == NO_CHAR? NEXTC : stream->lastChar; isWhitespace(c); c = NEXTC);
+
   stream->lastChar = NO_CHAR;
 
   if(containsChar(c, "\"'`"))
-    return getQuotedString(stream, c, buffer);
+    return getQuotedString(parentPool, stream, c, buffer);
 
   for(;isAlpha(c) || isNumber(c) || containsChar(c, "._$"); c = NEXTC)
-    buffer = appendChar(buffer, c, bufferSize);
+    buffer = appendChar(pool, buffer, c, bufferSize);
 
   CHECK_RESULTS
-  
+
   for(;c != END_STREAM && !isWhitespace(c) && !isAlpha(c) && !isNumber(c); c = NEXTC)
-    buffer = appendChar(buffer, c, bufferSize);
-  
-  CHECK_RESULTS
-  
-  return trimString(appendChar(buffer, c, 0));
-}
+    buffer = appendChar(pool, buffer, c, bufferSize);
 
-inline static BOOL isWhitespace(const character c)
+  CHECK_RESULTS
+
+  return trimStringToSize(parentPool, appendChar(pool, buffer, c, bufferSize));
+}
+//-----------------------------------------------------------------------------
+static BOOL isWhitespace(const CHAR c)
 {
   return containsChar(c, " \n\r\t");
 }
-
-inline static BOOL isAlpha(const character c)
+//-----------------------------------------------------------------------------
+static BOOL isAlpha(const CHAR c)
 {
   return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 }
-
-inline static BOOL isNumber(const character c)
+//-----------------------------------------------------------------------------
+static BOOL isNumber(const CHAR c)
 {
   return c >= '0' && c <= '9';
 }
-
-static BOOL containsChar(const character c, const character* const list)
+//-----------------------------------------------------------------------------
+static BOOL containsChar(const CHAR c, const string str)
 {
-  for(const character* i = list; *i != 0; i++)
+  for(const CHAR* i = str; *i != 0; i++)
     if(c == *i)
       return TRUE;
 
   return FALSE;
 }
-
-static String getQuotedString(TokenStream* const stream, const character quoteChar, String buffer)
+//-----------------------------------------------------------------------------
+static String getQuotedString(AutoReleasePool* const parentPool, TokenStream* const stream, const CHAR quoteChar, String buffer)
 {
-  buffer = appendChar(buffer, quoteChar, bufferSize);
+  AutoReleasePool pool = newAutoReleasePool();
+
+  buffer = appendChar(&pool, buffer, quoteChar, bufferSize);
   BOOL escaped = 0;
 
-  for(character c = NEXTC; c != END_STREAM; c = NEXTC)
+  for(CHAR c = NEXTC; c != END_STREAM; c = NEXTC)
   {
-    buffer = appendChar(buffer, c, bufferSize);
+    buffer = appendChar(&pool, buffer, c, bufferSize);
 
     if(c == '\\')
     {
@@ -99,5 +114,8 @@ static String getQuotedString(TokenStream* const stream, const character quoteCh
     escaped = FALSE;
   }
 
-  return trimString(buffer);
+  String result = trimStringToSize(parentPool, buffer);
+  pool.drain(&pool);
+  return result;
 }
+//-----------------------------------------------------------------------------

@@ -1,43 +1,50 @@
-#include <string.h>
+//=============================================================================
+// String.c
+//=============================================================================
 #include "String.h"
-
-String toString(const character* c)
-{
-  String s = newString(strlen(c));
-  strcpy(s.str, c);
-  return s;
-}
-
-String newString(const unsigned long size)
+//-----------------------------------------------------------------------------
+String StringOf(const string s)
 {
   String str = {
-    .str = calloc(size + 1, sizeof(character)),
+    .str = s,
+    .size = strlen(s)
+  };
+
+  return str;
+}
+//-----------------------------------------------------------------------------
+string newstring(AutoReleasePool* const pool, const unsigned long size)
+{
+  return pool->calloc(pool, size, sizeof(CHAR));
+}
+//-----------------------------------------------------------------------------
+String newString(AutoReleasePool* const pool, const unsigned long size)
+{
+  String str = {
+    .str = newstring(pool, size + 1),
     .size = size
   };
 
   return str;
 }
-
-String copyString(const String str, const unsigned long size)
+//-----------------------------------------------------------------------------
+string copystring(AutoReleasePool* const pool, const string str, const unsigned long size)
 {
-  const unsigned long len = strlen(str.str);
-
+  const unsigned long len = strlen(str);
+  return strncpy(newstring(pool, size), str, len >= size? size - 1 : len);
+}
+//-----------------------------------------------------------------------------
+String copyString(AutoReleasePool* const pool, const String str, const unsigned long size)
+{
   String copy = {
-    .str = strncpy(calloc(size, sizeof(character)), str.str, len < size? len : size),
+    .str = copystring(pool, str.str, size + 1),
     .size = size
   };
 
   return copy;
 }
-
-String concatString(const String a, const String b)
-{
-  String copy = copyString(a, strlen(a.str) + strlen(b.str));
-  strcpy(copy.str + strlen(a.str), b.str);
-  return copy;
-}
-
-String appendChar(String s, const character c, const unsigned long increaseBy)
+//-----------------------------------------------------------------------------
+String appendChar(AutoReleasePool* const pool, const String s, const CHAR c, const unsigned int increaseBy)
 {
   const unsigned long used = strlen(s.str);
 
@@ -47,28 +54,34 @@ String appendChar(String s, const character c, const unsigned long increaseBy)
     return s;
   }
 
-  String copy = copyString(s, s.size + (increaseBy < 1? 1 : increaseBy));
-  deleteString(s);
+  String copy = copyString(pool, s, s.size + increaseBy);
   copy.str[used] = c;
   return copy;
 }
-
-String joinStrings(const String a, const String b)
+//-----------------------------------------------------------------------------
+string joinstrings(AutoReleasePool* const pool, const string a, const string b)
 {
-  String copy = concatString(a, b);
-  deleteString(a);
-  deleteString(b);
+  unsigned int alen = strlen(a);
+  string copy = copystring(pool, a, alen + strlen(b) + 1);
+  strcpy(copy + alen, b);
   return copy;
 }
-
-String trimString(String s)
+//-----------------------------------------------------------------------------
+String joinStrings(AutoReleasePool* const pool, const String a, const String b)
 {
-  String copy = copyString(s, s.size);
-  deleteString(s);
+  string joined = joinstrings(pool, a.str, b.str);
+
+  String copy = {
+    .str = joined,
+    .size = strlen(joined)
+  };
+
   return copy;
 }
-
-void deleteString(String s)
+//-----------------------------------------------------------------------------
+String trimStringToSize(AutoReleasePool* const pool, const String s)
 {
-  free(s.str);
+  const unsigned long used = strlen(s.str);
+  return s.size > used? copyString(pool, s, used) : s;
 }
+//-----------------------------------------------------------------------------
