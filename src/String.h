@@ -8,8 +8,8 @@
 #include <string.h>
 //-----------------------------------------------------------------------------
 STRUCT String {
-  const string str;
-  const unsigned long size;
+  string str;
+  unsigned long size;
 } String;
 //-----------------------------------------------------------------------------
 String StringOf(const string);
