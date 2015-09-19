@@ -8,7 +8,7 @@
 //-----------------------------------------------------------------------------
 static const unsigned long bufferSize = 256;
 //-----------------------------------------------------------------------------
-static String next(AutoReleasePool*, TokenStream*);
+static String next(TokenStream*);
 static String nextWithRelease(AutoReleasePool*, AutoReleasePool*, TokenStream*);
 static String getQuotedString(AutoReleasePool*, TokenStream*, CHAR quoteChar, String buffer);
 static BOOL containsChar(const CHAR, const string);
@@ -16,10 +16,11 @@ static BOOL isWhitespace(const CHAR);
 static BOOL isAlpha(const CHAR);
 static BOOL isNumber(const CHAR);
 //-----------------------------------------------------------------------------
-TokenStream newTokenStream(CharStream* const charStream)
+TokenStream newTokenStream(AutoReleasePool* pool, CharStream* const charStream)
 {
   TokenStream tokenStream = {
     .next = *next,
+    .autoReleasePool = pool,
     .charStream = charStream,
     .lastChar = NO_CHAR
   };
@@ -34,10 +35,10 @@ if(buffer.str[0] != NO_CHAR)                  \
   return trimStringToSize(parentPool, buffer);\
 }
 //-----------------------------------------------------------------------------
-static String next(AutoReleasePool* const parentPool, TokenStream* const stream)
+static String next(TokenStream* const stream)
 {
   AutoReleasePool pool = newAutoReleasePool();
-  String result = nextWithRelease(parentPool, &pool, stream);
+  String result = nextWithRelease(stream->autoReleasePool, &pool, stream);
   pool.drain(&pool);
   return result;
 }

@@ -8,12 +8,13 @@
 #include "String.h"
 //-----------------------------------------------------------------------------
 STRUCT TokenStream {
-  String (*const next)(AutoReleasePool*, struct TokenStream*);
-  CharStream* const charStream;
+  String (*next)(struct TokenStream*);
+  AutoReleasePool* autoReleasePool;
+  CharStream* charStream;
   CHAR lastChar;
 } TokenStream;
 //-----------------------------------------------------------------------------
-TokenStream newTokenStream(CharStream* charStream);
+TokenStream newTokenStream(AutoReleasePool*, CharStream*);
 //-----------------------------------------------------------------------------
 #endif // SRC_TOKENSTREAM_H_
 //-----------------------------------------------------------------------------

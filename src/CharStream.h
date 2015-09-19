@@ -9,7 +9,7 @@
 #define NEXT(STREAM) INVOKE(STREAM, next)
 //-----------------------------------------------------------------------------
 STRUCT CharStream {
-  CHAR (* const next)(struct CharStream*);
+  CHAR (*next)(struct CharStream*);
 } CharStream;
 //-----------------------------------------------------------------------------
 STRUCT {
