@@ -85,3 +85,17 @@ String trimStringToSize(AutoReleasePool* const pool, const String s)
   return s.size > used? copyString(pool, s, used) : s;
 }
 //-----------------------------------------------------------------------------
+BOOL containsChar(const CHAR c, const string s)
+{
+  return charstringPos(c, 0, s) >= 0;
+}
+//-----------------------------------------------------------------------------
+int charstringPos(const CHAR c, unsigned int start, const string s)
+{
+  for(int i = start; s[i] != 0; i++)
+    if(c == s[i])
+      return i;
+
+  return -1;
+}
+//-----------------------------------------------------------------------------

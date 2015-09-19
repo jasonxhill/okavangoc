@@ -11,7 +11,6 @@ static const unsigned long bufferSize = 256;
 static String next(TokenStream*);
 static String nextWithRelease(AutoReleasePool*, AutoReleasePool*, TokenStream*);
 static String getQuotedString(AutoReleasePool*, TokenStream*, CHAR quoteChar, String buffer);
-static BOOL containsChar(const CHAR, const string);
 static BOOL isWhitespace(const CHAR);
 static BOOL isAlpha(const CHAR);
 static BOOL isNumber(const CHAR);
@@ -81,15 +80,6 @@ static BOOL isAlpha(const CHAR c)
 static BOOL isNumber(const CHAR c)
 {
   return c >= '0' && c <= '9';
-}
-//-----------------------------------------------------------------------------
-static BOOL containsChar(const CHAR c, const string str)
-{
-  for(const CHAR* i = str; *i != 0; i++)
-    if(c == *i)
-      return TRUE;
-
-  return FALSE;
 }
 //-----------------------------------------------------------------------------
 static String getQuotedString(AutoReleasePool* const parentPool, TokenStream* const stream, const CHAR quoteChar, String buffer)

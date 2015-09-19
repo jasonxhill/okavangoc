@@ -21,6 +21,8 @@ String appendChar(AutoReleasePool*, const String, const CHAR, unsigned int incre
 string joinstrings(AutoReleasePool*, const string, const string);
 String joinStrings(AutoReleasePool*, const String, const String);
 String trimStringToSize(AutoReleasePool*, const String);
+BOOL containsChar(CHAR, const string);
+int charstringPos(CHAR, unsigned int start, const string);
 unsigned int getAllocationCount();
 //-----------------------------------------------------------------------------
 #endif // SRC_STRING_H_
