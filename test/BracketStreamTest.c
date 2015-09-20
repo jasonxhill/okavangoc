@@ -21,35 +21,34 @@ STRUCT TestBracketVisitor {
   AutoReleasePool pool;
 } TestBracketVisitor;
 //-----------------------------------------------------------------------------
-static void testBracketStreamStart(BracketVisitor* const visitor, CHAR type)
+static void recordBracketVisit(BracketVisitor* const visitor, const CHAR type, const string visitType)
 {
-  TestBracketVisitor* v = (TestBracketVisitor*) visitor;
+  TestBracketVisitor* const v = (TestBracketVisitor*) visitor;
+  char sType[2] = {type, 0};
+  const String typeString = StringOf(type != END_STREAM? sType : "EOF");
 
-  if(type != END_STREAM)
-  {
-    String s = joinStrings(&(v->pool), v->str, StringOf("BEGIN~"));
-    s = appendChar(&(v->pool), s, type, 1);
-    v->str = joinStrings(&(v->pool), s, StringOf("~\n"));
-  }
-  else
-    v->str = joinStrings(&(v->pool), v->str, StringOf("BEGIN~EOF~\n"));
+  String s = joinStrings(&(v->pool), v->str, StringOf(visitType));
+  s = joinStrings(&(v->pool), s, StringOf("~"));
+  s = joinStrings(&(v->pool), s, typeString);
+  v->str = joinStrings(&(v->pool), s, StringOf("~\n"));
 }
 //-----------------------------------------------------------------------------
-static void testBracketStreamEnd(BracketVisitor* const visitor, CHAR type)
+static void testBracketStreamStart(BracketVisitor* const visitor, const CHAR type)
 {
-  TestBracketVisitor* v = (TestBracketVisitor*) visitor;
-
-  if(type != END_STREAM)
-  {
-    String s = joinStrings(&(v->pool), v->str, StringOf("END~"));
-    s = appendChar(&(v->pool), s, type, 1);
-    v->str = joinStrings(&(v->pool), s, StringOf("~\n"));
-  }
-  else
-    v->str = joinStrings(&(v->pool), v->str, StringOf("END~EOF~\n"));
+  recordBracketVisit(visitor, type, "BEGIN");
 }
 //-----------------------------------------------------------------------------
-static void testBracketStreamString(BracketVisitor* const visitor, String s)
+static void testBracketStreamEnd(BracketVisitor* const visitor, const CHAR type)
+{
+  recordBracketVisit(visitor, type, "END");
+}
+//-----------------------------------------------------------------------------
+static void testBracketStreamEndMissing(BracketVisitor* const visitor, const CHAR type)
+{
+  recordBracketVisit(visitor, type, "END_MISSING");
+}
+//-----------------------------------------------------------------------------
+static void testBracketStreamString(BracketVisitor* const visitor, const String s)
 {
 
 }
@@ -60,6 +59,7 @@ static TestBracketVisitor newTestBracketVisitor()
     .self = {
       .visitBracketStart = &testBracketStreamStart,
       .visitBracketEnd = testBracketStreamEnd,
+      .visitBracketEndMissing = &testBracketStreamEndMissing,
       .visitString = &testBracketStreamString
     },
 
@@ -99,6 +99,7 @@ static void testBrackets()
                 "BEGIN~;~\n"
                 "BEGIN~}~\n"
                 "END~}~\n"
+                "END_MISSING~;~\n"
                 "END~EOF~\n");
 
   CHECK_RESULTS("[]",
@@ -106,6 +107,7 @@ static void testBrackets()
                 "BEGIN~;~\n"
                 "BEGIN~]~\n"
                 "END~]~\n"
+                "END_MISSING~;~\n"
                 "END~EOF~\n");
 
   CHECK_RESULTS("()",
@@ -113,6 +115,7 @@ static void testBrackets()
                 "BEGIN~;~\n"
                 "BEGIN~)~\n"
                 "END~)~\n"
+                "END_MISSING~;~\n"
                 "END~EOF~\n");
 
   CHECK_RESULTS("{};",
@@ -139,6 +142,26 @@ static void testBrackets()
                 "END~;~\n"
                 "END~EOF~\n");
 
+  CHECK_RESULTS("(;);",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~)~\n"
+                "BEGIN~;~\n"
+                "END~;~\n"
+                "END~)~\n"
+                "END~;~\n"
+                "END~EOF~\n");
+
+  CHECK_RESULTS("(;",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~)~\n"
+                "BEGIN~;~\n"
+                "END~;~\n"
+                "END_MISSING~)~\n"
+                "END_MISSING~;~\n"
+                "END~EOF~\n");
+
   CHECK_RESULTS("{};{};",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
@@ -151,12 +174,72 @@ static void testBrackets()
                 "END~;~\n"
                 "END~EOF~\n");
 
+  CHECK_RESULTS("{ };{ };",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~}~\n"
+                "BEGIN~;~\n"
+                "END_MISSING~;~\n"
+                "END~}~\n"
+                "END~;~\n"
+                "BEGIN~;~\n"
+                "BEGIN~}~\n"
+                "BEGIN~;~\n"
+                "END_MISSING~;~\n"
+                "END~}~\n"
+                "END~;~\n"
+                "END~EOF~\n");
+
   CHECK_RESULTS("{}{};",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
                 "BEGIN~}~\n"
                 "END~}~\n"
                 "BEGIN~}~\n"
+                "END~}~\n"
+                "END~;~\n"
+                "END~EOF~\n");
+
+  CHECK_RESULTS("{}{}",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~}~\n"
+                "END~}~\n"
+                "BEGIN~}~\n"
+                "END~}~\n"
+                "END_MISSING~;~\n"
+                "END~EOF~\n");
+
+  CHECK_RESULTS("{[();];};",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~}~\n"
+                "BEGIN~;~\n"
+                "BEGIN~]~\n"
+                "BEGIN~;~\n"
+                "BEGIN~)~\n"
+                "END~)~\n"
+                "END~;~\n"
+                "END~]~\n"
+                "END~;~\n"
+                "END~}~\n"
+                "END~;~\n"
+                "END~EOF~\n");
+
+  CHECK_RESULTS("{[();;};",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~}~\n"
+                "BEGIN~;~\n"
+                "BEGIN~]~\n"
+                "BEGIN~;~\n"
+                "BEGIN~)~\n"
+                "END~)~\n"
+                "END~;~\n"
+                "BEGIN~;~\n"
+                "END~;~\n"
+                "END_MISSING~]~\n"
+                "END_MISSING~;~\n"
                 "END~}~\n"
                 "END~;~\n"
                 "END~EOF~\n");

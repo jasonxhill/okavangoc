@@ -6,6 +6,7 @@
 #include "Util.h"
 //-----------------------------------------------------------------------------
 #define END_STREAM 0
+#define NO_CHAR 0
 #define NEXT(STREAM) INVOKE(STREAM, next)
 //-----------------------------------------------------------------------------
 STRUCT CharStream {
