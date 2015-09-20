@@ -26,7 +26,5 @@
 typedef char CHAR; // typedef char so that it can be replaced later with utf-8
 typedef CHAR* string;
 //-----------------------------------------------------------------------------
-#define INVOKE(OBJECT, FUNCTION) OBJECT->FUNCTION(OBJECT)
-//-----------------------------------------------------------------------------
 #endif // SRC_UTIL_H_
 //-----------------------------------------------------------------------------

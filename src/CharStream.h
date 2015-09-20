@@ -7,7 +7,7 @@
 //-----------------------------------------------------------------------------
 #define END_STREAM 0
 #define NO_CHAR 0
-#define NEXT(STREAM) INVOKE(STREAM, next)
+#define NEXT(STREAM) STREAM->next(STREAM)
 //-----------------------------------------------------------------------------
 STRUCT CharStream {
   CHAR (*next)(struct CharStream*);
