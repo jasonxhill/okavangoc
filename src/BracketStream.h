@@ -11,7 +11,7 @@ STRUCT BracketVisitor {
   void (* const visitBracketStart)(struct BracketVisitor*, CHAR type);
   void (* const visitBracketEnd)(struct BracketVisitor*, CHAR type);
   void (* const visitBracketEndMissing)(struct BracketVisitor*, CHAR type);
-  void (* const visitString)(struct BracketVisitor*, String);
+  void (* const visitChar)(struct BracketVisitor*, CHAR);
 } BracketVisitor;
 //-----------------------------------------------------------------------------
 STRUCT BracketStream {

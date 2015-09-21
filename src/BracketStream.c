@@ -5,11 +5,6 @@
 //-----------------------------------------------------------------------------
 static void visit(BracketStream*, BracketVisitor*);
 static CHAR visitBracket(BracketStream*, BracketVisitor*, CHAR, CHAR);
-static CHAR visitBracketWithPool(BracketStream* const stream,
-                                 BracketVisitor* const visitor,
-                                 const CHAR type,
-                                 CHAR c,
-                                 AutoReleasePool* const pool);
 //-----------------------------------------------------------------------------
 BracketStream newBracketStream(CharStream* const c)
 {
@@ -26,40 +21,21 @@ static void visit(struct BracketStream* const stream, BracketVisitor* const visi
   visitBracket(stream, visitor, END_STREAM, NEXT(stream->charStream));
 }
 //-----------------------------------------------------------------------------
-static CHAR visitBracket(BracketStream* const stream, BracketVisitor* const visitor, const CHAR type, CHAR c)
-{
-  AutoReleasePool pool = newAutoReleasePool();
-  c = visitBracketWithPool(stream, visitor, type, c, &pool);
-  pool.drain(&pool);
-  return c;
-}
-//-----------------------------------------------------------------------------
 #define VISIT_END(TYPE) visitor->visitBracketEnd(visitor, TYPE);
 #define VISIT_MISSING(TYPE) visitor->visitBracketEndMissing(visitor, TYPE);
 
-#define VISIT_STRING if(value.size > 0)                     \
-                     {                                      \
-                       visitor->visitString(visitor, value);\
-                       value = StringOf("");                \
-                     }
-
 #define END_STATEMENT if(!startStatementNeeded)                       \
                       {                                               \
-                        VISIT_STRING                                  \
                         VISIT_MISSING(';');\
                       }
 
-static CHAR visitBracketWithPool(BracketStream* const stream,
-                                 BracketVisitor* const visitor,
-                                 const CHAR type,
-                                 CHAR c,
-                                 AutoReleasePool* const pool)
+static CHAR visitBracket(BracketStream* const stream,
+                         BracketVisitor* const visitor,
+                         const CHAR type,
+                         CHAR c)
 {
   visitor->visitBracketStart(visitor, type);
-
   BOOL startStatementNeeded = TRUE;
-  String value = StringOf("");
-
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   for(; c != END_STREAM || type == END_STREAM; c = NEXT(stream->charStream))
   {
@@ -87,7 +63,6 @@ static CHAR visitBracketWithPool(BracketStream* const stream,
     if(c == ';')
     {
       startStatementNeeded = TRUE;
-      VISIT_STRING
       VISIT_END(';');
       continue;
     }
@@ -97,12 +72,11 @@ static CHAR visitBracketWithPool(BracketStream* const stream,
 
     if(pos < 0)
     {
-      value = appendChar(pool, value, c, 255);
+      visitor->visitChar(visitor, c);
       continue;
     }
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     // Start a nested bracket
-    VISIT_STRING
     c = NEXT(stream->charStream);
     c = visitBracket(stream, visitor, "}])"[pos], c);
 

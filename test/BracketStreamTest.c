@@ -19,7 +19,8 @@ void mainBracketStreamTests()
 //=============================================================================
 STRUCT TestBracketVisitor {
   BracketVisitor self;
-  String str;
+  String result;
+  String statement;
   AutoReleasePool pool;
 } TestBracketVisitor;
 //-----------------------------------------------------------------------------
@@ -29,46 +30,61 @@ static void recordBracketVisit(BracketVisitor* const visitor, const CHAR type, c
   char sType[2] = {type, 0};
   const String typeString = StringOf(type != END_STREAM? sType : "EOF");
 
-  String s = joinStrings(&(v->pool), v->str, StringOf(visitType));
+  String s = joinStrings(&(v->pool), v->result, StringOf(visitType));
   s = joinStrings(&(v->pool), s, StringOf("~"));
   s = joinStrings(&(v->pool), s, typeString);
-  v->str = joinStrings(&(v->pool), s, StringOf("~\n"));
+  v->result = joinStrings(&(v->pool), s, StringOf("~\n"));
 }
 //-----------------------------------------------------------------------------
-static void testBracketStreamStart(BracketVisitor* const visitor, const CHAR type)
+static void appendStatement(TestBracketVisitor* const v)
 {
+  if(v->statement.size < 1)
+    return;
+
+  v->result = joinStrings(&(v->pool), v->result, StringOf("STRING="));
+  v->result = joinStrings(&(v->pool), v->result, v->statement);
+  v->result = joinStrings(&(v->pool), v->result, StringOf("\n"));
+  v->statement = StringOf("");
+}
+//-----------------------------------------------------------------------------
+static void testVisitBracketStart(BracketVisitor* const visitor, const CHAR type)
+{
+  appendStatement((TestBracketVisitor*) visitor);
   recordBracketVisit(visitor, type, "BEGIN");
 }
 //-----------------------------------------------------------------------------
-static void testBracketStreamEnd(BracketVisitor* const visitor, const CHAR type)
+static void testVisitBracketEnd(BracketVisitor* const visitor, const CHAR type)
 {
+  TestBracketVisitor* const v = (TestBracketVisitor*) visitor;
+  appendStatement(v);
   recordBracketVisit(visitor, type, "END");
 }
 //-----------------------------------------------------------------------------
-static void testBracketStreamEndMissing(BracketVisitor* const visitor, const CHAR type)
+static void testVisitBracketEndMissing(BracketVisitor* const visitor, const CHAR type)
 {
+  TestBracketVisitor* const v = (TestBracketVisitor*) visitor;
+  appendStatement(v);
   recordBracketVisit(visitor, type, "END_MISSING");
 }
 //-----------------------------------------------------------------------------
-static void testBracketStreamString(BracketVisitor* const visitor, const String str)
+static void testVisitBracketChar(BracketVisitor* const visitor, const CHAR c)
 {
   TestBracketVisitor* const v = (TestBracketVisitor*) visitor;
-  String s = joinStrings(&(v->pool), v->str, StringOf("STRING="));
-  s = joinStrings(&(v->pool), s, str);
-  v->str = joinStrings(&(v->pool), s, StringOf("\n"));
+  v->statement = appendChar(&(v->pool), v->statement, c, 10);
 }
 //-----------------------------------------------------------------------------
 static TestBracketVisitor newTestBracketVisitor()
 {
   TestBracketVisitor visitor = {
     .self = {
-      .visitBracketStart = &testBracketStreamStart,
-      .visitBracketEnd = testBracketStreamEnd,
-      .visitBracketEndMissing = &testBracketStreamEndMissing,
-      .visitString = &testBracketStreamString
+      .visitBracketStart = &testVisitBracketStart,
+      .visitBracketEnd = testVisitBracketEnd,
+      .visitBracketEndMissing = &testVisitBracketEndMissing,
+      .visitChar = &testVisitBracketChar
     },
 
-    .str = StringOf(""),
+    .result = StringOf(""),
+    .statement = StringOf(""),
     .pool = newAutoReleasePool()
   };
 
@@ -81,7 +97,7 @@ static void checkResults(const string input, const string expected, const string
   InMemoryCharStream istream = newInMemoryCharStream(input);
   BracketStream stream = newBracketStream(&(istream.stream));
   stream.visit(&stream, &(visitor.self));
-  _assertEquals_string(expected, visitor.str.str, file, line);
+  _assertEquals_string(expected, visitor.result.str, file, line);
   visitor.pool.drain(&(visitor.pool));
 }
 //-----------------------------------------------------------------------------
@@ -242,7 +258,7 @@ static void testBracketsWithStrings()
                 "STRING=a test statement\n"
                 "END~;~\n"
                 "END~EOF~\n");
-  
+
   CHECK_RESULTS("test statement A; test statement B;",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
@@ -252,7 +268,7 @@ static void testBracketsWithStrings()
                 "STRING= test statement B\n"
                 "END~;~\n"
                 "END~EOF~\n");
-  
+
   CHECK_RESULTS("{a test statement;};",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
@@ -263,7 +279,7 @@ static void testBracketsWithStrings()
                 "END~}~\n"
                 "END~;~\n"
                 "END~EOF~\n");
-  
+
   CHECK_RESULTS("{a test statement};",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
@@ -274,7 +290,7 @@ static void testBracketsWithStrings()
                 "END~}~\n"
                 "END~;~\n"
                 "END~EOF~\n");
-  
+
   CHECK_RESULTS("{test statement A; test statement B;};",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
@@ -288,7 +304,7 @@ static void testBracketsWithStrings()
                 "END~}~\n"
                 "END~;~\n"
                 "END~EOF~\n");
-  
+
   CHECK_RESULTS("{ };{ };",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
@@ -306,7 +322,7 @@ static void testBracketsWithStrings()
                 "END~}~\n"
                 "END~;~\n"
                 "END~EOF~\n");
-  
+
   CHECK_RESULTS("a test {} statement;",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
