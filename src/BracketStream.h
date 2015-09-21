@@ -16,7 +16,6 @@ STRUCT BracketVisitor {
 //-----------------------------------------------------------------------------
 STRUCT BracketStream {
   void (*visit)(struct BracketStream*, BracketVisitor*);
-  AutoReleasePool pool;
   CharStream* charStream;
 } BracketStream;
 //-----------------------------------------------------------------------------
