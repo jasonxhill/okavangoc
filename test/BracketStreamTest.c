@@ -6,11 +6,13 @@
 //-----------------------------------------------------------------------------
 static void testBrackets();
 static void testBracketsWithStrings();
+static void testBracketsWithQuotedStrings();
 //-----------------------------------------------------------------------------
 void mainBracketStreamTests()
 {
   TEST(testBrackets);
   TEST(testBracketsWithStrings);
+  TEST(testBracketsWithQuotedStrings);
 }
 //-----------------------------------------------------------------------------
 
@@ -331,6 +333,180 @@ static void testBracketsWithStrings()
                 "END~}~\n"
                 "STRING= statement\n"
                 "END~;~\n"
+                "END~EOF~\n");
+}
+//-----------------------------------------------------------------------------
+static void testBracketsWithQuotedStrings()
+{
+  CHECK_RESULTS("'a test statement';",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~'~\n"
+                "STRING='a test statement'\n"
+                "END~'~\n"
+                "END~;~\n"
+                "END~EOF~\n");
+
+  CHECK_RESULTS("\"a test statement\";",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~\"~\n"
+                "STRING=\"a test statement\"\n"
+                "END~\"~\n"
+                "END~;~\n"
+                "END~EOF~\n");
+
+  CHECK_RESULTS("{'a test statement';};",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~}~\n"
+                "BEGIN~;~\n"
+                "BEGIN~'~\n"
+                "STRING='a test statement'\n"
+                "END~'~\n"
+                "END~;~\n"
+                "END~}~\n"
+                "END~;~\n"
+                "END~EOF~\n");
+
+  CHECK_RESULTS("{'a \\'test statement';};",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~}~\n"
+                "BEGIN~;~\n"
+                "BEGIN~'~\n"
+                "STRING='a \\'test statement'\n"
+                "END~'~\n"
+                "END~;~\n"
+                "END~}~\n"
+                "END~;~\n"
+                "END~EOF~\n");
+
+  CHECK_RESULTS("{\"a \\\"test statement\";};",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~}~\n"
+                "BEGIN~;~\n"
+                "BEGIN~\"~\n"
+                "STRING=\"a \\\"test statement\"\n"
+                "END~\"~\n"
+                "END~;~\n"
+                "END~}~\n"
+                "END~;~\n"
+                "END~EOF~\n");
+
+  CHECK_RESULTS("{'a \"test statement';};",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~}~\n"
+                "BEGIN~;~\n"
+                "BEGIN~'~\n"
+                "STRING='a \"test statement'\n"
+                "END~'~\n"
+                "END~;~\n"
+                "END~}~\n"
+                "END~;~\n"
+                "END~EOF~\n");
+
+  CHECK_RESULTS("{\"a \\'test statement\";};",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~}~\n"
+                "BEGIN~;~\n"
+                "BEGIN~\"~\n"
+                "STRING=\"a \\'test statement\"\n"
+                "END~\"~\n"
+                "END~;~\n"
+                "END~}~\n"
+                "END~;~\n"
+                "END~EOF~\n");
+
+  CHECK_RESULTS("{'a test } statement';};",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~}~\n"
+                "BEGIN~;~\n"
+                "BEGIN~'~\n"
+                "STRING='a test } statement'\n"
+                "END~'~\n"
+                "END~;~\n"
+                "END~}~\n"
+                "END~;~\n"
+                "END~EOF~\n");
+
+  CHECK_RESULTS("{\"a test } statement\";};",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~}~\n"
+                "BEGIN~;~\n"
+                "BEGIN~\"~\n"
+                "STRING=\"a test } statement\"\n"
+                "END~\"~\n"
+                "END~;~\n"
+                "END~}~\n"
+                "END~;~\n"
+                "END~EOF~\n");
+
+  CHECK_RESULTS("'a test { statement';",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~'~\n"
+                "STRING='a test { statement'\n"
+                "END~'~\n"
+                "END~;~\n"
+                "END~EOF~\n");
+
+  CHECK_RESULTS("'a test } ] ; ) statement';",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~'~\n"
+                "STRING='a test } ] ; ) statement'\n"
+                "END~'~\n"
+                "END~;~\n"
+                "END~EOF~\n");
+
+  CHECK_RESULTS("'a test statement;",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~'~\n"
+                "STRING='a test statement;\n"
+                "END_MISSING~'~\n"
+                "END_MISSING~;~\n"
+                "END~EOF~\n");
+
+  CHECK_RESULTS("{'a test statement;};",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~}~\n"
+                "BEGIN~;~\n"
+                "BEGIN~'~\n"
+                "STRING='a test statement;};\n"
+                "END_MISSING~'~\n"
+                "END_MISSING~;~\n"
+                "END_MISSING~}~\n"
+                "END_MISSING~;~\n"
+                "END~EOF~\n");
+
+  CHECK_RESULTS("\"a test statement;",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~\"~\n"
+                "STRING=\"a test statement;\n"
+                "END_MISSING~\"~\n"
+                "END_MISSING~;~\n"
+                "END~EOF~\n");
+
+  CHECK_RESULTS("{\"a test statement;};",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~}~\n"
+                "BEGIN~;~\n"
+                "BEGIN~\"~\n"
+                "STRING=\"a test statement;};\n"
+                "END_MISSING~\"~\n"
+                "END_MISSING~;~\n"
+                "END_MISSING~}~\n"
+                "END_MISSING~;~\n"
                 "END~EOF~\n");
 }
 //-----------------------------------------------------------------------------

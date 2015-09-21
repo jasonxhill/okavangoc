@@ -86,7 +86,7 @@ static String getQuotedString(AutoReleasePool* const parentPool, TokenStream* co
   AutoReleasePool pool = newAutoReleasePool();
 
   buffer = appendChar(&pool, buffer, quoteChar, bufferSize);
-  BOOL escaped = 0;
+  BOOL escaped = FALSE;
 
   for(CHAR c = NEXTC; c != END_STREAM; c = NEXTC)
   {
@@ -98,7 +98,7 @@ static String getQuotedString(AutoReleasePool* const parentPool, TokenStream* co
       continue;
     }
 
-    if(c == quoteChar && escaped != TRUE)
+    if(c == quoteChar && !escaped)
       break;
 
     escaped = FALSE;
