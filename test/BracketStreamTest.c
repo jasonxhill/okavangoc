@@ -7,12 +7,14 @@
 static void testBrackets();
 static void testBracketsWithStrings();
 static void testBracketsWithQuotedStrings();
+static void testLineComments();
 //-----------------------------------------------------------------------------
 void mainBracketStreamTests()
 {
   TEST(testBrackets);
   TEST(testBracketsWithStrings);
   TEST(testBracketsWithQuotedStrings);
+  TEST(testLineComments);
 }
 //-----------------------------------------------------------------------------
 
@@ -120,134 +122,134 @@ static void testBrackets()
   CHECK_RESULTS("{}",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
-                "BEGIN~}~\n"
-                "END~}~\n"
+                "BEGIN~{~\n"
+                "END~{~\n"
                 "END_MISSING~;~\n"
                 "END~EOF~\n");
 
   CHECK_RESULTS("[]",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
-                "BEGIN~]~\n"
-                "END~]~\n"
+                "BEGIN~[~\n"
+                "END~[~\n"
                 "END_MISSING~;~\n"
                 "END~EOF~\n");
 
   CHECK_RESULTS("()",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
-                "BEGIN~)~\n"
-                "END~)~\n"
+                "BEGIN~(~\n"
+                "END~(~\n"
                 "END_MISSING~;~\n"
                 "END~EOF~\n");
 
   CHECK_RESULTS("{};",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
-                "BEGIN~}~\n"
-                "END~}~\n"
+                "BEGIN~{~\n"
+                "END~{~\n"
                 "END~;~\n"
                 "END~EOF~\n");
 
   CHECK_RESULTS("[];",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
-                "BEGIN~]~\n"
-                "END~]~\n"
+                "BEGIN~[~\n"
+                "END~[~\n"
                 "END~;~\n"
                 "END~EOF~\n");
 
   CHECK_RESULTS("();",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
-                "BEGIN~)~\n"
-                "END~)~\n"
+                "BEGIN~(~\n"
+                "END~(~\n"
                 "END~;~\n"
                 "END~EOF~\n");
 
   CHECK_RESULTS("(;);",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
-                "BEGIN~)~\n"
+                "BEGIN~(~\n"
                 "BEGIN~;~\n"
                 "END~;~\n"
-                "END~)~\n"
+                "END~(~\n"
                 "END~;~\n"
                 "END~EOF~\n");
 
   CHECK_RESULTS("(;",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
-                "BEGIN~)~\n"
+                "BEGIN~(~\n"
                 "BEGIN~;~\n"
                 "END~;~\n"
-                "END_MISSING~)~\n"
+                "END_MISSING~(~\n"
                 "END_MISSING~;~\n"
                 "END~EOF~\n");
 
   CHECK_RESULTS("{};{};",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
-                "BEGIN~}~\n"
-                "END~}~\n"
+                "BEGIN~{~\n"
+                "END~{~\n"
                 "END~;~\n"
                 "BEGIN~;~\n"
-                "BEGIN~}~\n"
-                "END~}~\n"
+                "BEGIN~{~\n"
+                "END~{~\n"
                 "END~;~\n"
                 "END~EOF~\n");
 
   CHECK_RESULTS("{}{};",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
-                "BEGIN~}~\n"
-                "END~}~\n"
-                "BEGIN~}~\n"
-                "END~}~\n"
+                "BEGIN~{~\n"
+                "END~{~\n"
+                "BEGIN~{~\n"
+                "END~{~\n"
                 "END~;~\n"
                 "END~EOF~\n");
 
   CHECK_RESULTS("{}{}",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
-                "BEGIN~}~\n"
-                "END~}~\n"
-                "BEGIN~}~\n"
-                "END~}~\n"
+                "BEGIN~{~\n"
+                "END~{~\n"
+                "BEGIN~{~\n"
+                "END~{~\n"
                 "END_MISSING~;~\n"
                 "END~EOF~\n");
 
   CHECK_RESULTS("{[();];};",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
-                "BEGIN~}~\n"
+                "BEGIN~{~\n"
                 "BEGIN~;~\n"
-                "BEGIN~]~\n"
+                "BEGIN~[~\n"
                 "BEGIN~;~\n"
-                "BEGIN~)~\n"
-                "END~)~\n"
+                "BEGIN~(~\n"
+                "END~(~\n"
                 "END~;~\n"
-                "END~]~\n"
+                "END~[~\n"
                 "END~;~\n"
-                "END~}~\n"
+                "END~{~\n"
                 "END~;~\n"
                 "END~EOF~\n");
 
   CHECK_RESULTS("{[();;};",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
-                "BEGIN~}~\n"
+                "BEGIN~{~\n"
                 "BEGIN~;~\n"
-                "BEGIN~]~\n"
+                "BEGIN~[~\n"
                 "BEGIN~;~\n"
-                "BEGIN~)~\n"
-                "END~)~\n"
+                "BEGIN~(~\n"
+                "END~(~\n"
                 "END~;~\n"
                 "BEGIN~;~\n"
                 "END~;~\n"
-                "END_MISSING~]~\n"
+                "END_MISSING~[~\n"
                 "END_MISSING~;~\n"
-                "END~}~\n"
+                "END~{~\n"
                 "END~;~\n"
                 "END~EOF~\n");
 }
@@ -274,54 +276,54 @@ static void testBracketsWithStrings()
   CHECK_RESULTS("{a test statement;};",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
-                "BEGIN~}~\n"
+                "BEGIN~{~\n"
                 "BEGIN~;~\n"
                 "STRING=a test statement\n"
                 "END~;~\n"
-                "END~}~\n"
+                "END~{~\n"
                 "END~;~\n"
                 "END~EOF~\n");
 
   CHECK_RESULTS("{a test statement};",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
-                "BEGIN~}~\n"
+                "BEGIN~{~\n"
                 "BEGIN~;~\n"
                 "STRING=a test statement\n"
                 "END_MISSING~;~\n"
-                "END~}~\n"
+                "END~{~\n"
                 "END~;~\n"
                 "END~EOF~\n");
 
   CHECK_RESULTS("{test statement A; test statement B;};",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
-                "BEGIN~}~\n"
+                "BEGIN~{~\n"
                 "BEGIN~;~\n"
                 "STRING=test statement A\n"
                 "END~;~\n"
                 "BEGIN~;~\n"
                 "STRING= test statement B\n"
                 "END~;~\n"
-                "END~}~\n"
+                "END~{~\n"
                 "END~;~\n"
                 "END~EOF~\n");
 
   CHECK_RESULTS("{ };{ };",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
-                "BEGIN~}~\n"
+                "BEGIN~{~\n"
                 "BEGIN~;~\n"
                 "STRING= \n"
                 "END_MISSING~;~\n"
-                "END~}~\n"
+                "END~{~\n"
                 "END~;~\n"
                 "BEGIN~;~\n"
-                "BEGIN~}~\n"
+                "BEGIN~{~\n"
                 "BEGIN~;~\n"
                 "STRING= \n"
                 "END_MISSING~;~\n"
-                "END~}~\n"
+                "END~{~\n"
                 "END~;~\n"
                 "END~EOF~\n");
 
@@ -329,8 +331,8 @@ static void testBracketsWithStrings()
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
                 "STRING=a test \n"
-                "BEGIN~}~\n"
-                "END~}~\n"
+                "BEGIN~{~\n"
+                "END~{~\n"
                 "STRING= statement\n"
                 "END~;~\n"
                 "END~EOF~\n");
@@ -359,91 +361,91 @@ static void testBracketsWithQuotedStrings()
   CHECK_RESULTS("{'a test statement';};",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
-                "BEGIN~}~\n"
+                "BEGIN~{~\n"
                 "BEGIN~;~\n"
                 "BEGIN~'~\n"
                 "STRING='a test statement'\n"
                 "END~'~\n"
                 "END~;~\n"
-                "END~}~\n"
+                "END~{~\n"
                 "END~;~\n"
                 "END~EOF~\n");
 
   CHECK_RESULTS("{'a \\'test statement';};",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
-                "BEGIN~}~\n"
+                "BEGIN~{~\n"
                 "BEGIN~;~\n"
                 "BEGIN~'~\n"
                 "STRING='a \\'test statement'\n"
                 "END~'~\n"
                 "END~;~\n"
-                "END~}~\n"
+                "END~{~\n"
                 "END~;~\n"
                 "END~EOF~\n");
 
   CHECK_RESULTS("{\"a \\\"test statement\";};",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
-                "BEGIN~}~\n"
+                "BEGIN~{~\n"
                 "BEGIN~;~\n"
                 "BEGIN~\"~\n"
                 "STRING=\"a \\\"test statement\"\n"
                 "END~\"~\n"
                 "END~;~\n"
-                "END~}~\n"
+                "END~{~\n"
                 "END~;~\n"
                 "END~EOF~\n");
 
   CHECK_RESULTS("{'a \"test statement';};",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
-                "BEGIN~}~\n"
+                "BEGIN~{~\n"
                 "BEGIN~;~\n"
                 "BEGIN~'~\n"
                 "STRING='a \"test statement'\n"
                 "END~'~\n"
                 "END~;~\n"
-                "END~}~\n"
+                "END~{~\n"
                 "END~;~\n"
                 "END~EOF~\n");
 
   CHECK_RESULTS("{\"a \\'test statement\";};",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
-                "BEGIN~}~\n"
+                "BEGIN~{~\n"
                 "BEGIN~;~\n"
                 "BEGIN~\"~\n"
                 "STRING=\"a \\'test statement\"\n"
                 "END~\"~\n"
                 "END~;~\n"
-                "END~}~\n"
+                "END~{~\n"
                 "END~;~\n"
                 "END~EOF~\n");
 
   CHECK_RESULTS("{'a test } statement';};",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
-                "BEGIN~}~\n"
+                "BEGIN~{~\n"
                 "BEGIN~;~\n"
                 "BEGIN~'~\n"
                 "STRING='a test } statement'\n"
                 "END~'~\n"
                 "END~;~\n"
-                "END~}~\n"
+                "END~{~\n"
                 "END~;~\n"
                 "END~EOF~\n");
 
   CHECK_RESULTS("{\"a test } statement\";};",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
-                "BEGIN~}~\n"
+                "BEGIN~{~\n"
                 "BEGIN~;~\n"
                 "BEGIN~\"~\n"
                 "STRING=\"a test } statement\"\n"
                 "END~\"~\n"
                 "END~;~\n"
-                "END~}~\n"
+                "END~{~\n"
                 "END~;~\n"
                 "END~EOF~\n");
 
@@ -477,13 +479,13 @@ static void testBracketsWithQuotedStrings()
   CHECK_RESULTS("{'a test statement;};",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
-                "BEGIN~}~\n"
+                "BEGIN~{~\n"
                 "BEGIN~;~\n"
                 "BEGIN~'~\n"
                 "STRING='a test statement;};\n"
                 "END_MISSING~'~\n"
                 "END_MISSING~;~\n"
-                "END_MISSING~}~\n"
+                "END_MISSING~{~\n"
                 "END_MISSING~;~\n"
                 "END~EOF~\n");
 
@@ -499,13 +501,99 @@ static void testBracketsWithQuotedStrings()
   CHECK_RESULTS("{\"a test statement;};",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
-                "BEGIN~}~\n"
+                "BEGIN~{~\n"
                 "BEGIN~;~\n"
                 "BEGIN~\"~\n"
                 "STRING=\"a test statement;};\n"
                 "END_MISSING~\"~\n"
                 "END_MISSING~;~\n"
-                "END_MISSING~}~\n"
+                "END_MISSING~{~\n"
+                "END_MISSING~;~\n"
+                "END~EOF~\n");
+}
+//-----------------------------------------------------------------------------
+static void testLineComments()
+{
+  CHECK_RESULTS("//test statement\n",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~/~\n"
+                "STRING=//test statement\n\n"
+                "END~/~\n"
+                "END_MISSING~;~\n"
+                "END~EOF~\n");
+
+  CHECK_RESULTS("//test statement",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~/~\n"
+                "STRING=//test statement\n"
+                "END_MISSING~/~\n"
+                "END_MISSING~;~\n"
+                "END~EOF~\n");
+
+  CHECK_RESULTS("a; x//test statement\ny;",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "STRING=a\n"
+                "END~;~\n"
+                "BEGIN~;~\n"
+                "STRING= x\n"
+                "BEGIN~/~\n"
+                "STRING=//test statement\n\n"
+                "END~/~\n"
+                "STRING=y\n"
+                "END~;~\n"
+                "END~EOF~\n");
+
+  CHECK_RESULTS("a; x//test stat//ement\ny;",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "STRING=a\n"
+                "END~;~\n"
+                "BEGIN~;~\n"
+                "STRING= x\n"
+                "BEGIN~/~\n"
+                "STRING=//test stat//ement\n\n"
+                "END~/~\n"
+                "STRING=y\n"
+                "END~;~\n"
+                "END~EOF~\n");
+
+  CHECK_RESULTS("a; 2/x//test statement\ny;",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "STRING=a\n"
+                "END~;~\n"
+                "BEGIN~;~\n"
+                "STRING= 2/x\n"
+                "BEGIN~/~\n"
+                "STRING=//test statement\n\n"
+                "END~/~\n"
+                "STRING=y\n"
+                "END~;~\n"
+                "END~EOF~\n");
+
+  CHECK_RESULTS("a; 2/x/3 //test statement\ny;",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "STRING=a\n"
+                "END~;~\n"
+                "BEGIN~;~\n"
+                "STRING= 2/x/3 \n"
+                "BEGIN~/~\n"
+                "STRING=//test statement\n\n"
+                "END~/~\n"
+                "STRING=y\n"
+                "END~;~\n"
+                "END~EOF~\n");
+
+  CHECK_RESULTS("\"a; 2/x/3 //test statement\ny;\"",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~\"~\n"
+                "STRING=\"a; 2/x/3 //test statement\ny;\"\n"
+                "END~\"~\n"
                 "END_MISSING~;~\n"
                 "END~EOF~\n");
 }

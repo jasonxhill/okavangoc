@@ -4,8 +4,8 @@
 #include "BracketStream.h"
 //-----------------------------------------------------------------------------
 static void visit(BracketStream*, BracketVisitor*);
-static CHAR visitBracket(BracketStream*, BracketVisitor*, CHAR, CHAR);
-static void visitQuotedString(BracketStream*, BracketVisitor*, CHAR quoteChar);
+static CHAR visitBracket(BracketStream*, BracketVisitor*, CHAR, CHAR, CHAR);
+static void visitQuotedToken(BracketStream*, BracketVisitor*, CHAR, CHAR, CHAR, CHAR);
 //-----------------------------------------------------------------------------
 BracketStream newBracketStream(CharStream* const c)
 {
@@ -19,7 +19,7 @@ BracketStream newBracketStream(CharStream* const c)
 //-----------------------------------------------------------------------------
 static void visit(struct BracketStream* const stream, BracketVisitor* const visitor)
 {
-  visitBracket(stream, visitor, END_STREAM, NEXT(stream->charStream));
+  visitBracket(stream, visitor, END_STREAM, END_STREAM, NEXT(stream->charStream));
 }
 //-----------------------------------------------------------------------------
 #define VISIT_START(TYPE) visitor->visitBracketStart(visitor, TYPE);
@@ -35,6 +35,7 @@ static void visit(struct BracketStream* const stream, BracketVisitor* const visi
 static CHAR visitBracket(BracketStream* const stream,
                          BracketVisitor* const visitor,
                          const CHAR type,
+                         const CHAR endChar,
                          CHAR c)
 {
   const string beginBrackets = "{[(";
@@ -43,12 +44,13 @@ static CHAR visitBracket(BracketStream* const stream,
 
   VISIT_START(type)
   BOOL startStatementNeeded = TRUE;
+  BOOL commentIndicator = FALSE;
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  for(; c != END_STREAM || type == END_STREAM; c = NEXT(stream->charStream))
+  for(; c != END_STREAM || endChar == END_STREAM; c = NEXT(stream->charStream))
   {
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     // Check for end bracket
-    if(c == type)
+    if(c == endChar)
     {
       END_STATEMENT
       VISIT_END(type)
@@ -74,10 +76,29 @@ static CHAR visitBracket(BracketStream* const stream,
       continue;
     }
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+    // Check for line comments
+    if(commentIndicator)
+    {
+      commentIndicator = FALSE;
+
+      if(c == '/')
+      {
+        visitQuotedToken(stream, visitor, '/', '\n', '/', '/');
+        continue;
+      }
+      else
+        VISIT_CHAR('/')
+    }
+    else if(c == '/')
+    {
+      commentIndicator = TRUE;
+      continue;
+    }
+    //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     // Check for quotes
     if(containsChar(c, quoteChars))
     {
-      visitQuotedString(stream, visitor, c);
+      visitQuotedToken(stream, visitor, c, c, c, '\0');
       continue;
     }
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -90,8 +111,7 @@ static CHAR visitBracket(BracketStream* const stream,
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     // Start a nested bracket
     const CHAR endBracket = endBrackets[charstringPos(c, 0, beginBrackets)];
-    c = NEXT(stream->charStream);
-    c = visitBracket(stream, visitor, endBracket, c);
+    c = visitBracket(stream, visitor, c, endBracket, NEXT(stream->charStream));
 
     if(c == NO_CHAR)
       continue;
@@ -99,7 +119,7 @@ static CHAR visitBracket(BracketStream* const stream,
     // The nested statement terminated incorrectly
     END_STATEMENT
 
-    if(c == type)
+    if(c == endChar)
     {
       VISIT_END(type)
       return NO_CHAR;
@@ -119,10 +139,19 @@ static CHAR visitBracket(BracketStream* const stream,
   //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 }
 //-----------------------------------------------------------------------------
-static void visitQuotedString(BracketStream* const stream, BracketVisitor* const visitor, const CHAR quoteChar)
+static void visitQuotedToken(BracketStream* const stream,
+                             BracketVisitor* const visitor,
+                             const CHAR type,
+                             const CHAR endChar,
+                             const CHAR c0,
+                             const CHAR c1)
 {
-  VISIT_START(quoteChar)
-  VISIT_CHAR(quoteChar)
+  VISIT_START(type)
+  VISIT_CHAR(c0)
+
+//  if(c1 != '\0')
+    VISIT_CHAR(c1)
+
   BOOL escaped = FALSE;
 
   for(CHAR c = NEXT(stream->charStream); c != END_STREAM; c = NEXT(stream->charStream))
@@ -134,15 +163,15 @@ static void visitQuotedString(BracketStream* const stream, BracketVisitor* const
       escaped = !escaped;
       continue;
     }
-    if(c == quoteChar && !escaped)
+    if(c == endChar && !escaped)
     {
-      VISIT_END(quoteChar)
+      VISIT_END(type)
       return;
     }
 
     escaped = FALSE;
   }
 
-  VISIT_MISSING(quoteChar)
+  VISIT_MISSING(type)
 }
 //-----------------------------------------------------------------------------
