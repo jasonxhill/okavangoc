@@ -5,7 +5,9 @@
 //-----------------------------------------------------------------------------
 static void visit(BracketStream*, BracketVisitor*);
 static CHAR visitBracket(BracketStream*, BracketVisitor*, CHAR, CHAR, CHAR);
-static void visitQuotedToken(BracketStream*, BracketVisitor*, CHAR, CHAR, CHAR, CHAR);
+static void visitQuotedToken(BracketStream*, BracketVisitor*, CHAR);
+static void visitSingleLineComment(BracketStream*, BracketVisitor*);
+static void visitMultiLineComment(BracketStream*, BracketVisitor*);
 //-----------------------------------------------------------------------------
 BracketStream newBracketStream(CharStream* const c)
 {
@@ -83,7 +85,12 @@ static CHAR visitBracket(BracketStream* const stream,
 
       if(c == '/')
       {
-        visitQuotedToken(stream, visitor, '/', '\n', '/', '/');
+        visitSingleLineComment(stream, visitor);
+        continue;
+      }
+      if(c == '*')
+      {
+        visitMultiLineComment(stream, visitor);
         continue;
       }
       else
@@ -98,7 +105,7 @@ static CHAR visitBracket(BracketStream* const stream,
     // Check for quotes
     if(containsChar(c, quoteChars))
     {
-      visitQuotedToken(stream, visitor, c, c, c, '\0');
+      visitQuotedToken(stream, visitor, c);
       continue;
     }
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -141,16 +148,10 @@ static CHAR visitBracket(BracketStream* const stream,
 //-----------------------------------------------------------------------------
 static void visitQuotedToken(BracketStream* const stream,
                              BracketVisitor* const visitor,
-                             const CHAR type,
-                             const CHAR endChar,
-                             const CHAR c0,
-                             const CHAR c1)
+                             const CHAR type)
 {
   VISIT_START(type)
-  VISIT_CHAR(c0)
-
-//  if(c1 != '\0')
-    VISIT_CHAR(c1)
+  VISIT_CHAR(type)
 
   BOOL escaped = FALSE;
 
@@ -163,7 +164,7 @@ static void visitQuotedToken(BracketStream* const stream,
       escaped = !escaped;
       continue;
     }
-    if(c == endChar && !escaped)
+    if(c == type && !escaped)
     {
       VISIT_END(type)
       return;
@@ -173,5 +174,49 @@ static void visitQuotedToken(BracketStream* const stream,
   }
 
   VISIT_MISSING(type)
+}
+//-----------------------------------------------------------------------------
+static void visitSingleLineComment(BracketStream* const stream, BracketVisitor* const visitor)
+{
+  VISIT_START('/')
+  VISIT_CHAR('/')
+  VISIT_CHAR('/')
+
+  for(CHAR c = NEXT(stream->charStream); c != END_STREAM; c = NEXT(stream->charStream))
+  {
+    VISIT_CHAR(c)
+
+    if(c == '\n')
+    {
+      VISIT_END('/')
+      return;
+    }
+  }
+
+  VISIT_MISSING('/')
+}
+//-----------------------------------------------------------------------------
+static void visitMultiLineComment(BracketStream* const stream, BracketVisitor* const visitor)
+{
+  VISIT_START('*')
+  VISIT_CHAR('/')
+  VISIT_CHAR('*')
+
+  BOOL escaped = TRUE;
+
+  for(CHAR c = NEXT(stream->charStream); c != END_STREAM; c = NEXT(stream->charStream))
+  {
+    VISIT_CHAR(c)
+
+    if(c == '/' && !escaped)
+    {
+      VISIT_END('*')
+      return;
+    }
+
+    escaped = c != '*';
+  }
+
+  VISIT_MISSING('*')
 }
 //-----------------------------------------------------------------------------

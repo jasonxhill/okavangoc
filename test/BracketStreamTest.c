@@ -8,6 +8,7 @@ static void testBrackets();
 static void testBracketsWithStrings();
 static void testBracketsWithQuotedStrings();
 static void testLineComments();
+static void testMultiLineComments();
 //-----------------------------------------------------------------------------
 void mainBracketStreamTests()
 {
@@ -15,6 +16,7 @@ void mainBracketStreamTests()
   TEST(testBracketsWithStrings);
   TEST(testBracketsWithQuotedStrings);
   TEST(testLineComments);
+  TEST(testMultiLineComments);
 }
 //-----------------------------------------------------------------------------
 
@@ -523,6 +525,16 @@ static void testLineComments()
                 "END_MISSING~;~\n"
                 "END~EOF~\n");
 
+  CHECK_RESULTS("//test statement\\\ny",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~/~\n"
+                "STRING=//test statement\\\n\n"
+                "END~/~\n"
+                "STRING=y\n"
+                "END_MISSING~;~\n"
+                "END~EOF~\n");
+
   CHECK_RESULTS("//test statement",
                 "BEGIN~EOF~\n"
                 "BEGIN~;~\n"
@@ -594,6 +606,77 @@ static void testLineComments()
                 "BEGIN~\"~\n"
                 "STRING=\"a; 2/x/3 //test statement\ny;\"\n"
                 "END~\"~\n"
+                "END_MISSING~;~\n"
+                "END~EOF~\n");
+}
+//-----------------------------------------------------------------------------
+void testMultiLineComments()
+{
+  CHECK_RESULTS("/* test */",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~*~\n"
+                "STRING=/* test */\n"
+                "END~*~\n"
+                "END_MISSING~;~\n"
+                "END~EOF~\n");
+
+  CHECK_RESULTS("/** test **/",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~*~\n"
+                "STRING=/** test **/\n"
+                "END~*~\n"
+                "END_MISSING~;~\n"
+                "END~EOF~\n");
+
+  CHECK_RESULTS("/**\n* test\n**/;",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~*~\n"
+                "STRING=/**\n* test\n**/\n"
+                "END~*~\n"
+                "END~;~\n"
+                "END~EOF~\n");
+
+  CHECK_RESULTS("/** /test **/",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~*~\n"
+                "STRING=/** /test **/\n"
+                "END~*~\n"
+                "END_MISSING~;~\n"
+                "END~EOF~\n");
+
+
+  CHECK_RESULTS("/**/test **/x",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~*~\n"
+                "STRING=/**/\n"
+                "END~*~\n"
+                "STRING=test **/x\n"
+                "END_MISSING~;~\n"
+                "END~EOF~\n");
+
+  CHECK_RESULTS("/**/test **/{}",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~*~\n"
+                "STRING=/**/\n"
+                "END~*~\n"
+                "STRING=test **/\n"
+                "BEGIN~{~\n"
+                "END~{~\n"
+                "END_MISSING~;~\n"
+                "END~EOF~\n");
+
+  CHECK_RESULTS("/*/* test **/",
+                "BEGIN~EOF~\n"
+                "BEGIN~;~\n"
+                "BEGIN~*~\n"
+                "STRING=/*/* test **/\n"
+                "END~*~\n"
                 "END_MISSING~;~\n"
                 "END~EOF~\n");
 }
