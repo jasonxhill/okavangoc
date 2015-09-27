@@ -34,7 +34,7 @@ static CHAR nextInMemoryChar(CharStream* const stream)
 //-----------------------------------------------------------------------------
 
 //=============================================================================
-// InMemoryCharStream
+// FileCharStream
 //=============================================================================
 static CHAR nextFileChar(CharStream*);
 static void closeFile(FileCharStream*);
