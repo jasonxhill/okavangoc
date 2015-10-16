@@ -2,6 +2,7 @@
 // BracketStream.c
 //=============================================================================
 #include "BracketStream.h"
+#include "String.h"
 //-----------------------------------------------------------------------------
 static void visit(BracketStream*, BracketVisitor*);
 static CHAR visitBracket(BracketStream*, BracketVisitor*, CHAR, CHAR, CHAR);
@@ -117,7 +118,7 @@ static CHAR visitBracket(BracketStream* const stream,
     }
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     // Start a nested bracket
-    const CHAR endBracket = endBrackets[charstringPos(c, 0, beginBrackets)];
+    const CHAR endBracket = endBrackets[charStringPos(c, 0, beginBrackets)];
     c = visitBracket(stream, visitor, c, endBracket, NEXT(stream->charStream));
 
     if(c == NO_CHAR)

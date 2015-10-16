@@ -1,20 +1,21 @@
 //=============================================================================
-// TokenStream.h
+// StringBuffer.h
 //=============================================================================
-#ifndef SRC_TOKENSTREAM_H_
-#define SRC_TOKENSTREAM_H_
+#ifndef SRC_STRING_BUFFER_H_
+#define SRC_STRING_BUFFER_H_
 
-#include "CharStream.h"
+#include "MemoryPool.h"
 #include "String.h"
 //-----------------------------------------------------------------------------
-STRUCT TokenStream {
-  string (*next)(struct TokenStream*);
+STRUCT StringBuffer {
+  string str;
+  unsigned int size;
+  struct StringBuffer (*appendChar)(struct StringBuffer*, CHAR);
+  string (*toString)(struct StringBuffer*, MemoryPool*);
   MemoryPool* memoryPool;
-  CharStream* charStream;
-  CHAR lastChar;
-} TokenStream;
+} StringBuffer;
 //-----------------------------------------------------------------------------
-TokenStream newTokenStream(MemoryPool*, CharStream*);
+StringBuffer newStringBuffer(MemoryPool*, string);
 //-----------------------------------------------------------------------------
-#endif // SRC_TOKENSTREAM_H_
+#endif // SRC_STRING_BUFFER_H_
 //-----------------------------------------------------------------------------

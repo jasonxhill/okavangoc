@@ -4,6 +4,7 @@
 #include "TestUtil.h"
 //-----------------------------------------------------------------------------
 extern void mainStringTests();
+extern void mainStringBufferTests();
 extern void mainCharStreamTests();
 extern void mainTokenStreamTests();
 extern void mainBracketStreamTests();
@@ -14,6 +15,7 @@ extern void mainMemoryPoolTests();
 int main(const int argc, const string argv[])
 {
   mainStringTests();
+  mainStringBufferTests();
   mainCharStreamTests();
   mainTokenStreamTests();
   mainBracketStreamTests();

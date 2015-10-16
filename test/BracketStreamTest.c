@@ -3,6 +3,7 @@
 //=============================================================================
 #include "TestUtil.h"
 #include "../src/BracketStream.h"
+#include "../src/StringBuffer.h"
 //-----------------------------------------------------------------------------
 static void testBrackets();
 static void testBracketsWithStrings();
@@ -25,32 +26,32 @@ void mainBracketStreamTests()
 //=============================================================================
 STRUCT TestBracketVisitor {
   BracketVisitor self;
-  String result;
-  String statement;
-  MemoryPool pool;
+  string result;
+  StringBuffer statement;
+  MemoryPool* pool;
 } TestBracketVisitor;
 //-----------------------------------------------------------------------------
 static void recordBracketVisit(BracketVisitor* const visitor, const CHAR type, const string visitType)
 {
   TestBracketVisitor* const v = (TestBracketVisitor*) visitor;
   char sType[2] = {type, 0};
-  const String typeString = StringOf(type != END_STREAM? sType : "EOF");
+  const string typeString = type != END_STREAM? sType : "EOF";
 
-  String s = joinStrings(&(v->pool), v->result, StringOf(visitType));
-  s = joinStrings(&(v->pool), s, StringOf("~"));
-  s = joinStrings(&(v->pool), s, typeString);
-  v->result = joinStrings(&(v->pool), s, StringOf("~\n"));
+  string s = joinStrings(v->pool, v->result, visitType);
+  s = joinStrings(v->pool, s, "~");
+  s = joinStrings(v->pool, s, typeString);
+  v->result = joinStrings(v->pool, s, "~\n");
 }
 //-----------------------------------------------------------------------------
 static void appendStatement(TestBracketVisitor* const v)
 {
-  if(v->statement.size < 1)
+  if(strlen(v->statement.str) < 1)
     return;
 
-  v->result = joinStrings(&(v->pool), v->result, StringOf("STRING="));
-  v->result = joinStrings(&(v->pool), v->result, v->statement);
-  v->result = joinStrings(&(v->pool), v->result, StringOf("\n"));
-  v->statement = StringOf("");
+  v->result = joinStrings(v->pool, v->result, "STRING=");
+  v->result = joinStrings(v->pool, v->result, v->statement.str);
+  v->result = joinStrings(v->pool, v->result, "\n");
+  v->statement = newStringBuffer(v->pool, "");
 }
 //-----------------------------------------------------------------------------
 static void testVisitBracketStart(BracketVisitor* const visitor, const CHAR type)
@@ -76,10 +77,10 @@ static void testVisitBracketEndMissing(BracketVisitor* const visitor, const CHAR
 static void testVisitBracketChar(BracketVisitor* const visitor, const CHAR c)
 {
   TestBracketVisitor* const v = (TestBracketVisitor*) visitor;
-  v->statement = appendChar(&(v->pool), v->statement, c, 10);
+  v->statement.appendChar(&(v->statement), c);
 }
 //-----------------------------------------------------------------------------
-static TestBracketVisitor newTestBracketVisitor()
+static TestBracketVisitor newTestBracketVisitor(MemoryPool* const memPool)
 {
   TestBracketVisitor visitor = {
     .self = {
@@ -89,9 +90,9 @@ static TestBracketVisitor newTestBracketVisitor()
       .visitChar = &testVisitBracketChar
     },
 
-    .result = StringOf(""),
-    .statement = StringOf(""),
-    .pool = newMemoryPool()
+    .result = "",
+    .statement = newStringBuffer(memPool, ""),
+    .pool = memPool
   };
 
   return visitor;
@@ -99,12 +100,15 @@ static TestBracketVisitor newTestBracketVisitor()
 //-----------------------------------------------------------------------------
 static void checkResults(const string input, const string expected, const string file, const unsigned int line)
 {
-  TestBracketVisitor visitor = newTestBracketVisitor();
+  MemoryPool pool = newMemoryPool();
+
+  TestBracketVisitor visitor = newTestBracketVisitor(&pool);
   InMemoryCharStream istream = newInMemoryCharStream(input);
   BracketStream stream = newBracketStream(&(istream.stream));
   stream.visit(&stream, &(visitor.self));
-  _assertEquals_string(expected, visitor.result.str, file, line);
-  visitor.pool.drain(&(visitor.pool));
+  assertEquals(string, expected, visitor.result);
+
+  pool.drain(&pool);
 }
 //-----------------------------------------------------------------------------
 #define CHECK_RESULTS(A, B) checkResults(A, B, __FILE__, __LINE__)

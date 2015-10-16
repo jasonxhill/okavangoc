@@ -17,8 +17,3 @@ DEFINE_ASSERT(unsigned_int, a != b, %i)
 DEFINE_ASSERT(char, a != b, %c)
 DEFINE_ASSERT(string, (strcmp(a, b) != 0), %s)
 //-----------------------------------------------------------------------------
-DECLARE_ASSERT(String)
-{
-  _assertEquals_string(a.str, b.str, file, line);
-}
-//-----------------------------------------------------------------------------

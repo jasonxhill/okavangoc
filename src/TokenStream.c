@@ -2,14 +2,13 @@
 // TokenStream.h
 //=============================================================================
 #include "TokenStream.h"
+#include "StringBuffer.h"
 //-----------------------------------------------------------------------------
 #define NEXTC NEXT(stream->charStream)
 //-----------------------------------------------------------------------------
-static const unsigned long bufferSize = 256;
-//-----------------------------------------------------------------------------
-static String next(TokenStream*);
-static String nextWithRelease(MemoryPool*, MemoryPool*, TokenStream*);
-static String getQuotedString(MemoryPool*, TokenStream*, CHAR quoteChar, String buffer);
+static string next(TokenStream*);
+static string nextWithRelease(MemoryPool*, MemoryPool*, TokenStream*);
+static string getQuotedString(MemoryPool*, TokenStream*, CHAR quoteChar, StringBuffer);
 static BOOL isWhitespace(const CHAR);
 static BOOL isAlpha(const CHAR);
 static BOOL isNumber(const CHAR);
@@ -30,20 +29,20 @@ TokenStream newTokenStream(MemoryPool* pool, CharStream* const charStream)
 if(buffer.str[0] != NO_CHAR)                  \
 {                                             \
   stream->lastChar = c;                       \
-  return trimStringToSize(parentPool, buffer);\
+  return buffer.toString(&buffer, parentPool);\
 }
 //-----------------------------------------------------------------------------
-static String next(TokenStream* const stream)
+static string next(TokenStream* const stream)
 {
   MemoryPool pool = newMemoryPool();
-  String result = nextWithRelease(stream->memoryPool, &pool, stream);
+  string result = nextWithRelease(stream->memoryPool, &pool, stream);
   pool.drain(&pool);
   return result;
 }
 //-----------------------------------------------------------------------------
-static String nextWithRelease(MemoryPool* const parentPool, MemoryPool* const pool,  TokenStream* const stream)
+static string nextWithRelease(MemoryPool* const parentPool, MemoryPool* const pool,  TokenStream* const stream)
 {
-  String buffer = newString(pool, bufferSize);
+  StringBuffer buffer = newStringBuffer(pool, "");
   CHAR c;
 
   for(c = stream->lastChar == NO_CHAR? NEXTC : stream->lastChar; isWhitespace(c); c = NEXTC);
@@ -54,16 +53,17 @@ static String nextWithRelease(MemoryPool* const parentPool, MemoryPool* const po
     return getQuotedString(parentPool, stream, c, buffer);
 
   for(;isAlpha(c) || isNumber(c) || containsChar(c, "._$"); c = NEXTC)
-    buffer = appendChar(pool, buffer, c, bufferSize);
+    buffer.appendChar(&buffer, c);
 
   CHECK_RESULTS
 
   for(;c != END_STREAM && !isWhitespace(c) && !isAlpha(c) && !isNumber(c); c = NEXTC)
-    buffer = appendChar(pool, buffer, c, bufferSize);
+    buffer.appendChar(&buffer, c);
 
   CHECK_RESULTS
 
-  return trimStringToSize(parentPool, appendChar(pool, buffer, c, bufferSize));
+  buffer.appendChar(&buffer, c);
+  return buffer.toString(&buffer, parentPool);
 }
 //-----------------------------------------------------------------------------
 static BOOL isWhitespace(const CHAR c)
@@ -81,16 +81,16 @@ static BOOL isNumber(const CHAR c)
   return c >= '0' && c <= '9';
 }
 //-----------------------------------------------------------------------------
-static String getQuotedString(MemoryPool* const parentPool, TokenStream* const stream, const CHAR quoteChar, String buffer)
+static string getQuotedString(MemoryPool* const parentPool, TokenStream* const stream, const CHAR quoteChar, StringBuffer buffer)
 {
   MemoryPool pool = newMemoryPool();
 
-  buffer = appendChar(&pool, buffer, quoteChar, bufferSize);
+  buffer.appendChar(&buffer, quoteChar);
   BOOL escaped = FALSE;
 
   for(CHAR c = NEXTC; c != END_STREAM; c = NEXTC)
   {
-    buffer = appendChar(&pool, buffer, c, bufferSize);
+    buffer.appendChar(&buffer, c);
 
     if(c == '\\')
     {
@@ -104,7 +104,7 @@ static String getQuotedString(MemoryPool* const parentPool, TokenStream* const s
     escaped = FALSE;
   }
 
-  String result = trimStringToSize(parentPool, buffer);
+  string result = buffer.toString(&buffer, parentPool);
   pool.drain(&pool);
   return result;
 }

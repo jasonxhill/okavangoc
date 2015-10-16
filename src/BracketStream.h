@@ -5,7 +5,6 @@
 #define SRC_BRACKETSTREAM_H_
 
 #include "CharStream.h"
-#include "String.h"
 //-----------------------------------------------------------------------------
 STRUCT BracketVisitor {
   void (* const visitBracketStart)(struct BracketVisitor*, CHAR type);

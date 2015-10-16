@@ -25,7 +25,6 @@ DECLARE_ASSERT(int);
 DECLARE_ASSERT(unsigned_int);
 DECLARE_ASSERT(char);
 DECLARE_ASSERT(string);
-DECLARE_ASSERT(String);
 //-----------------------------------------------------------------------------
 #define assertEquals(TYPE, A, B) _assertEquals_##TYPE(A, B, __FILE__, __LINE__)
 //-----------------------------------------------------------------------------
