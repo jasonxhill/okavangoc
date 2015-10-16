@@ -28,7 +28,7 @@ static void testStreamFile()
     "export:\n"
     "{\n"
     "  main:import.out.puts(\"hello world!\");\n"
-    "}"
+    "};"
   ));
 
   fstream.close(&fstream);
