@@ -1,20 +1,20 @@
 //=============================================================================
-// AutoReleasePool.h
+// MemoryPool.h
 //=============================================================================
-#ifndef SRC_AUTORELEASEPOOL_H_
-#define SRC_AUTORELEASEPOOL_H_
+#ifndef SRC_MEMORYPOOL_H_
+#define SRC_MEMORYPOOL_H_
 
 #include "Util.h"
 //-----------------------------------------------------------------------------
-STRUCT AutoReleasePool {
+STRUCT MemoryPool {
   void* head;
-  void* (* const calloc)(struct AutoReleasePool*, size_t, size_t);
-  void (* const drain)(struct AutoReleasePool*);
-} AutoReleasePool;
+  void* (* const calloc)(struct MemoryPool*, size_t, size_t);
+  void (* const drain)(struct MemoryPool*);
+} MemoryPool;
 //-----------------------------------------------------------------------------
-AutoReleasePool newAutoReleasePool();
+MemoryPool newMemoryPool();
 //-----------------------------------------------------------------------------
 unsigned int getAllocationCount();
 //-----------------------------------------------------------------------------
-#endif // SRC_AUTORELEASEPOOL_H_
+#endif // SRC_MEMORYPOOL_H_
 //-----------------------------------------------------------------------------

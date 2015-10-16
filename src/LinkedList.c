@@ -9,13 +9,13 @@ STRUCT LinkedListNode {
 } LinkedListNode;
 //-----------------------------------------------------------------------------
 static void appendToList(LinkedList*, void*);
-static void appendToNode(LinkedListNode**, void*, AutoReleasePool*);
+static void appendToNode(LinkedListNode**, void*, MemoryPool*);
 static void* getHead(LinkedList*);
 static LinkedList getTail(LinkedList*);
 static unsigned int getSize(LinkedList*);
 static unsigned int getNodeCount(LinkedListNode*);
 //-----------------------------------------------------------------------------
-LinkedList newLinkedList(AutoReleasePool* const pool)
+LinkedList newLinkedList(MemoryPool* const pool)
 {
   LinkedList list = {
     .data = pool->calloc(pool, 1, sizeof(LinkedListNode)),
@@ -23,7 +23,7 @@ LinkedList newLinkedList(AutoReleasePool* const pool)
     .head = &getHead,
     .tail = &getTail,
     .size = &getSize,
-    .autoReleasePool = pool
+    .memoryPool = pool
   };
 
   return list;
@@ -33,10 +33,10 @@ LinkedList newLinkedList(AutoReleasePool* const pool)
 //-----------------------------------------------------------------------------
 static void appendToList(LinkedList* const list, void* const value)
 {
-  appendToNode(&FIRST(list), value, list->autoReleasePool);
+  appendToNode(&FIRST(list), value, list->memoryPool);
 }
 //-----------------------------------------------------------------------------
-static void appendToNode(LinkedListNode** node, void* const value, AutoReleasePool* const pool)
+static void appendToNode(LinkedListNode** node, void* const value, MemoryPool* const pool)
 {
   if(*node != NULL)
   {

@@ -27,7 +27,7 @@ STRUCT TestBracketVisitor {
   BracketVisitor self;
   String result;
   String statement;
-  AutoReleasePool pool;
+  MemoryPool pool;
 } TestBracketVisitor;
 //-----------------------------------------------------------------------------
 static void recordBracketVisit(BracketVisitor* const visitor, const CHAR type, const string visitType)
@@ -91,7 +91,7 @@ static TestBracketVisitor newTestBracketVisitor()
 
     .result = StringOf(""),
     .statement = StringOf(""),
-    .pool = newAutoReleasePool()
+    .pool = newMemoryPool()
   };
 
   return visitor;

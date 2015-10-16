@@ -18,7 +18,7 @@ void mainStringTests()
 //-----------------------------------------------------------------------------
 static void testCopyString()
 {
-  AutoReleasePool pool = newAutoReleasePool();
+  MemoryPool pool = newMemoryPool();
 
   {
     String s = StringOf("A test string");
@@ -38,7 +38,7 @@ static void testCopyString()
 //-----------------------------------------------------------------------------
 static void testAppendString()
 {
-  AutoReleasePool pool = newAutoReleasePool();
+  MemoryPool pool = newMemoryPool();
 
   String s = StringOf("A test string");
   s = appendChar(&pool, s, '!', 10);
@@ -51,7 +51,7 @@ static void testAppendString()
 //-----------------------------------------------------------------------------
 static void testTrimStringToSize()
 {
-  AutoReleasePool pool = newAutoReleasePool();
+  MemoryPool pool = newMemoryPool();
 
   String s = copyString(&pool, StringOf("A test string"), 50);
   assertEquals(string, "A test string", s.str);
@@ -66,7 +66,7 @@ static void testTrimStringToSize()
 //-----------------------------------------------------------------------------
 static void testJoinStrings()
 {
-  AutoReleasePool pool = newAutoReleasePool();
+  MemoryPool pool = newMemoryPool();
 
   {
     string str = joinstrings(&pool, "Test str A ", "Test str B");

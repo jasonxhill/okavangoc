@@ -4,7 +4,7 @@
 #ifndef SRC_LINKEDLIST_H_
 #define SRC_LINKEDLIST_H_
 
-#include "AutoReleasePool.h"
+#include "MemoryPool.h"
 //-----------------------------------------------------------------------------
 STRUCT LinkedList {
   void* data;
@@ -12,10 +12,10 @@ STRUCT LinkedList {
   void* (*head)(struct LinkedList*);
   struct LinkedList (*tail)(struct LinkedList*);
   unsigned int (*size)(struct LinkedList*);
-  AutoReleasePool* autoReleasePool;
+  MemoryPool* memoryPool;
 } LinkedList;
 //-----------------------------------------------------------------------------
-LinkedList newLinkedList(AutoReleasePool*);
+LinkedList newLinkedList(MemoryPool*);
 //-----------------------------------------------------------------------------
 #endif // SRC_LINKEDLIST_H_
 //-----------------------------------------------------------------------------

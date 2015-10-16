@@ -19,7 +19,7 @@ void mainTokenStreamTests()
 static void testTokenStreamEOF()
 {
   {
-    AutoReleasePool pool = newAutoReleasePool();
+    MemoryPool pool = newMemoryPool();
 
     InMemoryCharStream istream = newInMemoryCharStream("a !! test stream");
     TokenStream stream = newTokenStream(&pool, &(istream.stream));
@@ -36,7 +36,7 @@ static void testTokenStreamEOF()
 //-----------------------------------------------------------------------------
 static void testTokenStream()
 {
-  AutoReleasePool pool = newAutoReleasePool();
+  MemoryPool pool = newMemoryPool();
 
   {
     InMemoryCharStream istream = newInMemoryCharStream("a test stream 100");
@@ -94,7 +94,7 @@ static void testTokenStream()
 //-----------------------------------------------------------------------------
 static void testQuotedString()
 {
-  AutoReleasePool pool = newAutoReleasePool();
+  MemoryPool pool = newMemoryPool();
 
   {
     InMemoryCharStream istream = newInMemoryCharStream("B \"3 & ^ 5\" xp ");

@@ -8,17 +8,17 @@
 static const unsigned long bufferSize = 256;
 //-----------------------------------------------------------------------------
 static String next(TokenStream*);
-static String nextWithRelease(AutoReleasePool*, AutoReleasePool*, TokenStream*);
-static String getQuotedString(AutoReleasePool*, TokenStream*, CHAR quoteChar, String buffer);
+static String nextWithRelease(MemoryPool*, MemoryPool*, TokenStream*);
+static String getQuotedString(MemoryPool*, TokenStream*, CHAR quoteChar, String buffer);
 static BOOL isWhitespace(const CHAR);
 static BOOL isAlpha(const CHAR);
 static BOOL isNumber(const CHAR);
 //-----------------------------------------------------------------------------
-TokenStream newTokenStream(AutoReleasePool* pool, CharStream* const charStream)
+TokenStream newTokenStream(MemoryPool* pool, CharStream* const charStream)
 {
   TokenStream tokenStream = {
     .next = *next,
-    .autoReleasePool = pool,
+    .memoryPool = pool,
     .charStream = charStream,
     .lastChar = NO_CHAR
   };
@@ -35,13 +35,13 @@ if(buffer.str[0] != NO_CHAR)                  \
 //-----------------------------------------------------------------------------
 static String next(TokenStream* const stream)
 {
-  AutoReleasePool pool = newAutoReleasePool();
-  String result = nextWithRelease(stream->autoReleasePool, &pool, stream);
+  MemoryPool pool = newMemoryPool();
+  String result = nextWithRelease(stream->memoryPool, &pool, stream);
   pool.drain(&pool);
   return result;
 }
 //-----------------------------------------------------------------------------
-static String nextWithRelease(AutoReleasePool* const parentPool, AutoReleasePool* const pool,  TokenStream* const stream)
+static String nextWithRelease(MemoryPool* const parentPool, MemoryPool* const pool,  TokenStream* const stream)
 {
   String buffer = newString(pool, bufferSize);
   CHAR c;
@@ -81,9 +81,9 @@ static BOOL isNumber(const CHAR c)
   return c >= '0' && c <= '9';
 }
 //-----------------------------------------------------------------------------
-static String getQuotedString(AutoReleasePool* const parentPool, TokenStream* const stream, const CHAR quoteChar, String buffer)
+static String getQuotedString(MemoryPool* const parentPool, TokenStream* const stream, const CHAR quoteChar, String buffer)
 {
-  AutoReleasePool pool = newAutoReleasePool();
+  MemoryPool pool = newMemoryPool();
 
   buffer = appendChar(&pool, buffer, quoteChar, bufferSize);
   BOOL escaped = FALSE;

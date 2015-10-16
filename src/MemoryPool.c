@@ -1,7 +1,7 @@
 //=============================================================================
-// AutoReleasePool.c
+// MemoryPool.c
 //=============================================================================
-#include "AutoReleasePool.h"
+#include "MemoryPool.h"
 #include <string.h>
 //-----------------------------------------------------------------------------
 static unsigned int allocationCount = 0;
@@ -11,11 +11,11 @@ unsigned int getAllocationCount()
   return allocationCount;
 }
 //-----------------------------------------------------------------------------
-STRUCT AutoReleasePoolNode {
-  struct AutoReleasePoolNode* next;
-} AutoReleasePoolNode;
+STRUCT MemoryPoolNode {
+  struct MemoryPoolNode* next;
+} MemoryPoolNode;
 //-----------------------------------------------------------------------------
-static void addNode(AutoReleasePoolNode** nodeList, AutoReleasePoolNode* const newNode)
+static void addNode(MemoryPoolNode** nodeList, MemoryPoolNode* const newNode)
 {
   if(*nodeList == NULL)
     *nodeList = newNode;
@@ -23,37 +23,37 @@ static void addNode(AutoReleasePoolNode** nodeList, AutoReleasePoolNode* const n
     addNode(&((*nodeList)->next), newNode);
 }
 //-----------------------------------------------------------------------------
-static void freeNodes(AutoReleasePoolNode* node)
+static void freeNodes(MemoryPoolNode* node)
 {
   if(node == NULL)
     return;
 
-  AutoReleasePoolNode* const next = node->next;
+  MemoryPoolNode* const next = node->next;
   free(node);
   allocationCount--;
   freeNodes(next);
 }
 //-----------------------------------------------------------------------------
-static void* autoReleasePoolCalloc(struct AutoReleasePool* const pool, const size_t num, size_t size)
+static void* memoryPoolCalloc(struct MemoryPool* const pool, const size_t num, size_t size)
 {
-  const unsigned int allocSize = sizeof(AutoReleasePoolNode) + num*size;
+  const unsigned int allocSize = sizeof(MemoryPoolNode) + num*size;
   void* const mem = memset(malloc(allocSize), 0, allocSize);
   allocationCount++;
-  addNode((AutoReleasePoolNode**) &(pool->head), mem);
-  return mem + sizeof(AutoReleasePoolNode);
+  addNode((MemoryPoolNode**) &(pool->head), mem);
+  return mem + sizeof(MemoryPoolNode);
 }
 //-----------------------------------------------------------------------------
-static void drainAutoReleasePool(AutoReleasePool* const this)
+static void drainPool(MemoryPool* const this)
 {
   freeNodes(this->head);
 }
 //-----------------------------------------------------------------------------
-AutoReleasePool newAutoReleasePool()
+MemoryPool newMemoryPool()
 {
-  AutoReleasePool pool = {
+  MemoryPool pool = {
     .head = NULL,
-    .calloc = &autoReleasePoolCalloc,
-    .drain = &drainAutoReleasePool,
+    .calloc = &memoryPoolCalloc,
+    .drain = &drainPool,
   };
 
   return pool;

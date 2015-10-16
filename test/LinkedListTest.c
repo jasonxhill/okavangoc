@@ -13,7 +13,7 @@ void mainLinkedListTests()
 //-----------------------------------------------------------------------------
 void testLinkedList()
 {
-  AutoReleasePool pool = newAutoReleasePool();
+  MemoryPool pool = newMemoryPool();
 
   LinkedList listA = newLinkedList(&pool);
   assertEquals(unsigned_int, 0, listA.size(&listA));

@@ -1,12 +1,12 @@
 //=============================================================================
-// TestAutoReleasePool.c
+// TestMemoryPool.c
 //=============================================================================
 #include "TestUtil.h"
-#include "../src/AutoReleasePool.h"
+#include "../src/MemoryPool.h"
 //-----------------------------------------------------------------------------
 static void testAllocationCount();
 //-----------------------------------------------------------------------------
-void mainAutoReleasePoolTests()
+void mainMemoryPoolTests()
 {
   TEST(testAllocationCount);
 }

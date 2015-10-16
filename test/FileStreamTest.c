@@ -14,7 +14,7 @@ void mainFileStreamTest()
 //-----------------------------------------------------------------------------
 static void testStreamFile()
 {
-  AutoReleasePool pool = newAutoReleasePool();
+  MemoryPool pool = newMemoryPool();
   FileCharStream fstream = newFileCharStream("./test/TestMain.okv");
   CharStream* const stream = &(fstream.stream);
   String s = StringOf("");

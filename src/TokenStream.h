@@ -9,12 +9,12 @@
 //-----------------------------------------------------------------------------
 STRUCT TokenStream {
   String (*next)(struct TokenStream*);
-  AutoReleasePool* autoReleasePool;
+  MemoryPool* memoryPool;
   CharStream* charStream;
   CHAR lastChar;
 } TokenStream;
 //-----------------------------------------------------------------------------
-TokenStream newTokenStream(AutoReleasePool*, CharStream*);
+TokenStream newTokenStream(MemoryPool*, CharStream*);
 //-----------------------------------------------------------------------------
 #endif // SRC_TOKENSTREAM_H_
 //-----------------------------------------------------------------------------

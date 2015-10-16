@@ -13,12 +13,12 @@ String StringOf(const string s)
   return str;
 }
 //-----------------------------------------------------------------------------
-string newstring(AutoReleasePool* const pool, const unsigned long size)
+string newstring(MemoryPool* const pool, const unsigned long size)
 {
   return pool->calloc(pool, size, sizeof(CHAR));
 }
 //-----------------------------------------------------------------------------
-String newString(AutoReleasePool* const pool, const unsigned long size)
+String newString(MemoryPool* const pool, const unsigned long size)
 {
   String str = {
     .str = newstring(pool, size + 1),
@@ -28,13 +28,13 @@ String newString(AutoReleasePool* const pool, const unsigned long size)
   return str;
 }
 //-----------------------------------------------------------------------------
-string copystring(AutoReleasePool* const pool, const string str, const unsigned long size)
+string copystring(MemoryPool* const pool, const string str, const unsigned long size)
 {
   const unsigned long len = strlen(str);
   return strncpy(newstring(pool, size), str, len >= size? size - 1 : len);
 }
 //-----------------------------------------------------------------------------
-String copyString(AutoReleasePool* const pool, const String str, const unsigned long size)
+String copyString(MemoryPool* const pool, const String str, const unsigned long size)
 {
   String copy = {
     .str = copystring(pool, str.str, size + 1),
@@ -44,7 +44,7 @@ String copyString(AutoReleasePool* const pool, const String str, const unsigned 
   return copy;
 }
 //-----------------------------------------------------------------------------
-String appendChar(AutoReleasePool* const pool, const String s, const CHAR c, const unsigned int increaseBy)
+String appendChar(MemoryPool* const pool, const String s, const CHAR c, const unsigned int increaseBy)
 {
   const unsigned long used = strlen(s.str);
 
@@ -59,7 +59,7 @@ String appendChar(AutoReleasePool* const pool, const String s, const CHAR c, con
   return copy;
 }
 //-----------------------------------------------------------------------------
-string joinstrings(AutoReleasePool* const pool, const string a, const string b)
+string joinstrings(MemoryPool* const pool, const string a, const string b)
 {
   unsigned int alen = strlen(a);
   string copy = copystring(pool, a, alen + strlen(b) + 1);
@@ -67,7 +67,7 @@ string joinstrings(AutoReleasePool* const pool, const string a, const string b)
   return copy;
 }
 //-----------------------------------------------------------------------------
-String joinStrings(AutoReleasePool* const pool, const String a, const String b)
+String joinStrings(MemoryPool* const pool, const String a, const String b)
 {
   string joined = joinstrings(pool, a.str, b.str);
 
@@ -79,7 +79,7 @@ String joinStrings(AutoReleasePool* const pool, const String a, const String b)
   return copy;
 }
 //-----------------------------------------------------------------------------
-String trimStringToSize(AutoReleasePool* const pool, const String s)
+String trimStringToSize(MemoryPool* const pool, const String s)
 {
   const unsigned long used = strlen(s.str);
   return s.size > used? copyString(pool, s, used) : s;
