@@ -99,3 +99,15 @@ int charstringPos(const CHAR c, unsigned int start, const string s)
   return -1;
 }
 //-----------------------------------------------------------------------------
+unsigned long hashstring(const string str)
+{
+  unsigned long hash = 5381;
+  CHAR* s = str;
+  int c;
+
+  while((c = *s++))
+    hash = ((hash << 5) + hash) + c;
+
+  return hash;
+}
+//-----------------------------------------------------------------------------
