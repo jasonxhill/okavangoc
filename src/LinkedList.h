@@ -8,10 +8,19 @@
 //-----------------------------------------------------------------------------
 STRUCT LinkedList {
   void* data;
-  void (*append)(struct LinkedList*, void*);
+  struct LinkedList (*append)(struct LinkedList*, void*);
+
   void* (*head)(struct LinkedList*);
   struct LinkedList (*tail)(struct LinkedList*);
-  unsigned int (*size)(struct LinkedList*);
+  struct LinkedList (*untail)(struct LinkedList*);
+
+  struct LinkedList (*first)(struct LinkedList*);
+  struct LinkedList (*last)(struct LinkedList*);
+
+  BOOL (*empty)(const struct LinkedList*);
+  BOOL (*untailable)(const struct LinkedList*);
+
+  unsigned int (*size)(const struct LinkedList*);
   MemoryPool* memoryPool;
 } LinkedList;
 //-----------------------------------------------------------------------------

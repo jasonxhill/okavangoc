@@ -3,12 +3,15 @@
 //=============================================================================
 #include "TestUtil.h"
 #include "../src/LinkedList.h"
+#include "../src/String.h"
 //-----------------------------------------------------------------------------
 static void testLinkedList();
+static void testLinkedListTraversal();
 //-----------------------------------------------------------------------------
 void mainLinkedListTests()
 {
   TEST(testLinkedList);
+  TEST(testLinkedListTraversal);
 }
 //-----------------------------------------------------------------------------
 void testLinkedList()
@@ -56,6 +59,47 @@ void testLinkedList()
   assertEquals(unsigned_int, 5, listA.size(&listA));
   assertEquals(unsigned_int, 4, listB.size(&listB));
   assertEquals(unsigned_int, 3, listC.size(&listC));
+
+  pool.drain(&pool);
+}
+//-----------------------------------------------------------------------------
+static void testLinkedListTraversal()
+{
+  MemoryPool pool = newMemoryPool();
+  LinkedList list = newLinkedList(&pool);
+
+  assertTrue(list.empty(&list));
+  list.append(&list, "valA,");
+  assertFalse(list.empty(&list));
+
+  list.append(&list, "valB,")
+      .append(&list, "valC,")
+      .append(&list, "valD,")
+      .append(&list, "valE,");
+
+  LinkedList last = list.last(&list);
+  assertEquals(string, "valE,", last.head(&last));
+
+  LinkedList first = last.first(&last);
+  assertEquals(string, "valA,", first.head(&first));
+
+  string s = "";
+
+  for(LinkedList l = first; !l.empty(&l); l = l.tail(&l))
+    s = joinStrings(&pool, s, l.head(&l));
+
+  assertEquals(string, "valA,valB,valC,valD,valE,", s);
+
+  s = "";
+
+  for(LinkedList l = last; TRUE; l = l.untail(&l)) {
+    s = joinStrings(&pool, s, l.head(&l));
+
+    if(!l.untailable(&l))
+      break;
+  }
+//
+  assertEquals(string, "valE,valD,valC,valB,valA,", s);
 
   pool.drain(&pool);
 }

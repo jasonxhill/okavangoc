@@ -27,6 +27,8 @@ DECLARE_ASSERT(char);
 DECLARE_ASSERT(string);
 //-----------------------------------------------------------------------------
 #define assertEquals(TYPE, A, B) _assertEquals_##TYPE(A, B, __FILE__, __LINE__)
+#define assertTrue(VAL) assertEquals(int, TRUE, VAL);
+#define assertFalse(VAL) assertEquals(int, FALSE, VAL);
 //-----------------------------------------------------------------------------
 #endif // TEST_TESTUTIL_H_
 //-----------------------------------------------------------------------------

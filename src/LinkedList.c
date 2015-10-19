@@ -4,24 +4,43 @@
 #include "LinkedList.h"
 //-----------------------------------------------------------------------------
 STRUCT LinkedListNode {
+  struct LinkedListNode* previous;
   struct LinkedListNode* next;
   void* value;
 } LinkedListNode;
 //-----------------------------------------------------------------------------
-static void appendToList(LinkedList*, void*);
-static void appendToNode(LinkedListNode**, void*, MemoryPool*);
+static LinkedList appendToList(LinkedList*, void*);
+static void appendToNode(LinkedListNode*, void*, MemoryPool*);
+//-----------------------------------------------------------------------------
 static void* getHead(LinkedList*);
 static LinkedList getTail(LinkedList*);
-static unsigned int getSize(LinkedList*);
-static unsigned int getNodeCount(LinkedListNode*);
+static LinkedList getUntail(LinkedList*);
+//-----------------------------------------------------------------------------
+static LinkedList getFirst(LinkedList*);
+static LinkedList getLast(LinkedList*);
+//-----------------------------------------------------------------------------
+static BOOL isEmpty(const LinkedList*);
+static BOOL isUntailable(const LinkedList*);
+//-----------------------------------------------------------------------------
+static unsigned int getSize(const LinkedList*);
+static unsigned int getNodeCount(const LinkedListNode*);
 //-----------------------------------------------------------------------------
 LinkedList newLinkedList(MemoryPool* const pool)
 {
   LinkedList list = {
     .data = pool->calloc(pool, 1, sizeof(LinkedListNode)),
     .append = &appendToList,
+
     .head = &getHead,
     .tail = &getTail,
+    .untail = &getUntail,
+
+    .first = &getFirst,
+    .last = &getLast,
+
+    .empty = &isEmpty,
+    .untailable = &isUntailable,
+
     .size = &getSize,
     .memoryPool = pool
   };
@@ -29,48 +48,90 @@ LinkedList newLinkedList(MemoryPool* const pool)
   return list;
 }
 //-----------------------------------------------------------------------------
-#define FIRST(LIST) (((LinkedListNode*)LIST->data)->next)
+#define ROOT ((LinkedListNode*)list->data)
+#define FIRST (ROOT->next)
 //-----------------------------------------------------------------------------
-static void appendToList(LinkedList* const list, void* const value)
+static LinkedList appendToList(LinkedList* const list, void* const value)
 {
-  appendToNode(&FIRST(list), value, list->memoryPool);
+  appendToNode(ROOT, value, list->memoryPool);
+  return *list;
 }
 //-----------------------------------------------------------------------------
-static void appendToNode(LinkedListNode** node, void* const value, MemoryPool* const pool)
+static void appendToNode(LinkedListNode* const previous,
+                         void* const value,
+                         MemoryPool* const pool)
 {
-  if(*node != NULL)
+  if(previous->next != NULL)
   {
-    appendToNode(&((*node)->next), value, pool);
+    appendToNode(previous->next, value, pool);
     return;
   }
 
-  LinkedListNode* const nextNode = pool->calloc(pool, 1, sizeof(LinkedListNode));
-  nextNode->value = value;
-  *node = nextNode;
+  previous->next = pool->calloc(pool, 1, sizeof(LinkedListNode));
+  previous->next->value = value;
+  previous->next->previous = previous;
 }
 //-----------------------------------------------------------------------------
 static void* getHead(LinkedList* const list)
 {
-  LinkedListNode* const first = FIRST(list);
+  LinkedListNode* const first = FIRST;
   return first != NULL? first->value : NULL;
 }
 //-----------------------------------------------------------------------------
 static LinkedList getTail(LinkedList* const list)
 {
-  if(FIRST(list) == NULL)
+  if(FIRST == NULL)
     return *list;
 
   LinkedList tail = *list;
-  tail.data = FIRST(list);
+  tail.data = FIRST;
   return tail;
 }
 //-----------------------------------------------------------------------------
-static unsigned int getSize(LinkedList* const list)
+static LinkedList getUntail(LinkedList* const list)
 {
-  return getNodeCount(FIRST(list));
+  if(ROOT->previous == NULL)
+    return *list;
+
+  LinkedList previous = *list;
+  previous.data = ROOT->previous;
+  return previous;
 }
 //-----------------------------------------------------------------------------
-static unsigned int getNodeCount(LinkedListNode* const node)
+static LinkedList getFirst(LinkedList* const list)
+{
+  if(ROOT->previous == NULL)
+    return *list;
+
+  LinkedList tail = getUntail(list);
+  return getFirst(&tail);
+}
+//-----------------------------------------------------------------------------
+static LinkedList getLast(LinkedList* const list)
+{
+  if(FIRST == NULL || FIRST->next == NULL)
+    return *list;
+
+  LinkedList tail = getTail(list);
+  return getLast(&tail);
+}
+//-----------------------------------------------------------------------------
+static BOOL isEmpty(const LinkedList* const list)
+{
+  return FIRST == NULL;
+}
+//-----------------------------------------------------------------------------
+static BOOL isUntailable(const LinkedList* const list)
+{
+  return ROOT->previous != NULL;
+}
+//-----------------------------------------------------------------------------
+static unsigned int getSize(const LinkedList* const list)
+{
+  return getNodeCount(FIRST);
+}
+//-----------------------------------------------------------------------------
+static unsigned int getNodeCount(const LinkedListNode* const node)
 {
   return node != NULL? getNodeCount(node->next) + 1 : 0;
 }
