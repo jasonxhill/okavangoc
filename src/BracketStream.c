@@ -5,10 +5,10 @@
 #include "String.h"
 //-----------------------------------------------------------------------------
 static void visit(BracketStream*, BracketVisitor*);
-static CHAR visitBracket(BracketStream*, BracketVisitor*, CHAR, CHAR, CHAR);
-static void visitQuotedToken(BracketStream*, BracketVisitor*, CHAR);
-static void visitSingleLineComment(BracketStream*, BracketVisitor*);
-static void visitMultiLineComment(BracketStream*, BracketVisitor*);
+static StreamChar visitBracket(BracketStream*, BracketVisitor*, StreamChar, CHAR, StreamChar);
+static StreamChar visitQuotedToken(BracketStream*, BracketVisitor*, StreamChar);
+static StreamChar visitSingleLineComment(BracketStream*, BracketVisitor*, StreamChar);
+static StreamChar visitMultiLineComment(BracketStream*, BracketVisitor*, StreamChar);
 //-----------------------------------------------------------------------------
 BracketStream newBracketStream(CharStream* const c)
 {
@@ -20,26 +20,49 @@ BracketStream newBracketStream(CharStream* const c)
   return bracketStream;
 }
 //-----------------------------------------------------------------------------
-static void visit(struct BracketStream* const stream, BracketVisitor* const visitor)
+static StreamChar replaceChar(StreamChar sc, const CHAR replacement)
 {
-  visitBracket(stream, visitor, END_STREAM, END_STREAM, NEXT(stream->charStream));
+  sc.c = replacement;
+  return sc;
 }
 //-----------------------------------------------------------------------------
-#define VISIT_START(TYPE) visitor->visitBracketStart(visitor, TYPE);
-#define VISIT_END(TYPE) visitor->visitBracketEnd(visitor, TYPE);
-#define VISIT_MISSING(TYPE) visitor->visitBracketEndMissing(visitor, TYPE);
-#define VISIT_CHAR(C) visitor->visitChar(visitor, C);
+static StreamChar nextChar(BracketStream* const stream, const StreamChar lastChar)
+{
+  const CHAR c = stream->charStream->next(stream->charStream);
+
+  if(c == '\0')
+    return replaceChar(lastChar, c);
+  if(c != '\n') {
+    const StreamChar sc = {.c = c, .line = lastChar.line, .linePosition = lastChar.linePosition + 1};
+    return sc;
+  }
+
+  const StreamChar sc = {.c = c, .line = lastChar.line + 1, .linePosition = 0};
+  return sc;
+}
 //-----------------------------------------------------------------------------
-#define END_STATEMENT if(!startStatementNeeded)                       \
-                      {                                               \
-                        VISIT_MISSING(';')\
+static void visit(BracketStream* const stream, BracketVisitor* const visitor)
+{
+  StreamChar firstChar = {.c = END_STREAM, .line = 1, .linePosition = 0};
+  visitBracket(stream, visitor, firstChar, END_STREAM, nextChar(stream, firstChar));
+}
+//-----------------------------------------------------------------------------
+#define SC(C) replaceChar(sc, C)
+#define VISIT_START(VAR) visitor->visitBracketStart(visitor, VAR);
+#define VISIT_CHAR(VAR) visitor->visitChar(visitor, VAR);
+#define VISIT_END(VAR) visitor->visitBracketEnd(visitor, replaceChar(sc, VAR));
+#define VISIT_MISSING(VAR) visitor->visitBracketEndMissing(visitor, replaceChar(sc, VAR));
+//-----------------------------------------------------------------------------
+#define END_STATEMENT if(!startStatementNeeded)\
+                      {                        \
+                        VISIT_MISSING(';')     \
                       }
 //-----------------------------------------------------------------------------
-static CHAR visitBracket(BracketStream* const stream,
-                         BracketVisitor* const visitor,
-                         const CHAR type,
-                         const CHAR endChar,
-                         CHAR c)
+static StreamChar visitBracket(BracketStream* const stream,
+                               BracketVisitor* const visitor,
+                               const StreamChar type,
+                               const CHAR endChar,
+                               StreamChar sc)
 {
   const string beginBrackets = "{[(";
   const string endBrackets = "}])";
@@ -49,30 +72,30 @@ static CHAR visitBracket(BracketStream* const stream,
   BOOL startStatementNeeded = TRUE;
   BOOL commentIndicator = FALSE;
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  for(; c != END_STREAM || endChar == END_STREAM; c = NEXT(stream->charStream))
+  for(; sc.c != END_STREAM || endChar == END_STREAM; sc = nextChar(stream, sc))
   {
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     // Check for end bracket
-    if(c == endChar)
+    if(sc.c == endChar)
     {
       END_STATEMENT
-      VISIT_END(type)
-      return NO_CHAR;
+      VISIT_END(type.c)
+      return replaceChar(sc, NO_CHAR);
     }
-    if(containsChar(c, endBrackets))
+    if(containsChar(sc.c, endBrackets))
     {
       END_STATEMENT
-      VISIT_MISSING(type)
-      return c;
+      VISIT_MISSING(type.c)
+      return sc;
     }
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     // Check start and end of statements
     if(startStatementNeeded)
     {
       startStatementNeeded = FALSE;
-      VISIT_START(';')
+      VISIT_START(SC(';'))
     }
-    if(c == ';')
+    if(sc.c == ';')
     {
       startStatementNeeded = TRUE;
       VISIT_END(';')
@@ -84,57 +107,57 @@ static CHAR visitBracket(BracketStream* const stream,
     {
       commentIndicator = FALSE;
 
-      if(c == '/')
+      if(sc.c == '/')
       {
-        visitSingleLineComment(stream, visitor);
+        sc = visitSingleLineComment(stream, visitor, sc);
         continue;
       }
-      if(c == '*')
+      if(sc.c == '*')
       {
-        visitMultiLineComment(stream, visitor);
+        sc = visitMultiLineComment(stream, visitor, sc);
         continue;
       }
       else
-        VISIT_CHAR('/')
+        VISIT_CHAR(SC('/'))
     }
-    else if(c == '/')
+    else if(sc.c == '/')
     {
       commentIndicator = TRUE;
       continue;
     }
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     // Check for quotes
-    if(containsChar(c, quoteChars))
+    if(containsChar(sc.c, quoteChars))
     {
-      visitQuotedToken(stream, visitor, c);
+      sc = visitQuotedToken(stream, visitor, sc);
       continue;
     }
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     // Check for start of nested bracket
-    if(!containsChar(c, beginBrackets))
+    if(!containsChar(sc.c, beginBrackets))
     {
-      VISIT_CHAR(c)
+      VISIT_CHAR(sc)
       continue;
     }
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     // Start a nested bracket
-    const CHAR endBracket = endBrackets[charStringPos(c, 0, beginBrackets)];
-    c = visitBracket(stream, visitor, c, endBracket, NEXT(stream->charStream));
+    const CHAR endBracket = endBrackets[charStringPos(sc.c, 0, beginBrackets)];
+    sc = visitBracket(stream, visitor, sc, endBracket, nextChar(stream, sc));
 
-    if(c == NO_CHAR)
+    if(sc.c == NO_CHAR)
       continue;
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     // The nested statement terminated incorrectly
     END_STATEMENT
 
-    if(c == endChar)
+    if(sc.c == endChar)
     {
-      VISIT_END(type)
-      return NO_CHAR;
+      VISIT_END(type.c)
+      return replaceChar(sc, NO_CHAR);
     }
 
-    VISIT_MISSING(type)
-    return c;
+    VISIT_MISSING(type.c)
+    return sc;
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
   }
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -142,82 +165,90 @@ static CHAR visitBracket(BracketStream* const stream,
   //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
   // No closing bracket was found
   END_STATEMENT
-  VISIT_MISSING(type)
-  return NO_CHAR;
+  VISIT_MISSING(type.c)
+  return replaceChar(sc, NO_CHAR);
   //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 }
 //-----------------------------------------------------------------------------
-static void visitQuotedToken(BracketStream* const stream,
-                             BracketVisitor* const visitor,
-                             const CHAR type)
+static StreamChar visitQuotedToken(BracketStream* const stream,
+                                   BracketVisitor* const visitor,
+                                   const StreamChar type)
 {
   VISIT_START(type)
   VISIT_CHAR(type)
 
   BOOL escaped = FALSE;
+  StreamChar sc;
 
-  for(CHAR c = NEXT(stream->charStream); c != END_STREAM; c = NEXT(stream->charStream))
+  for(sc = nextChar(stream, type); sc.c != END_STREAM; sc = nextChar(stream, sc))
   {
-    VISIT_CHAR(c)
+    VISIT_CHAR(sc)
 
-    if(c == '\\')
+    if(sc.c == '\\')
     {
       escaped = !escaped;
       continue;
     }
-    if(c == type && !escaped)
+    if(sc.c == type.c && !escaped)
     {
-      VISIT_END(type)
-      return;
+      VISIT_END(type.c)
+      return sc;
     }
 
     escaped = FALSE;
   }
 
-  VISIT_MISSING(type)
+  VISIT_MISSING(type.c)
+  return sc;
 }
 //-----------------------------------------------------------------------------
-static void visitSingleLineComment(BracketStream* const stream, BracketVisitor* const visitor)
+static StreamChar visitSingleLineComment(BracketStream* const stream,
+                                         BracketVisitor* const visitor,
+                                         StreamChar sc)
 {
-  VISIT_START('/')
-  VISIT_CHAR('/')
-  VISIT_CHAR('/')
+  VISIT_START(sc)
+  VISIT_CHAR(sc)
+  VISIT_CHAR(sc)
 
-  for(CHAR c = NEXT(stream->charStream); c != END_STREAM; c = NEXT(stream->charStream))
+  for(sc = nextChar(stream, sc); sc.c != END_STREAM; sc = nextChar(stream, sc))
   {
-    VISIT_CHAR(c)
+    VISIT_CHAR(sc)
 
-    if(c == '\n')
+    if(sc.c == '\n')
     {
       VISIT_END('/')
-      return;
+      return sc;
     }
   }
 
   VISIT_MISSING('/')
+  return sc;
 }
 //-----------------------------------------------------------------------------
-static void visitMultiLineComment(BracketStream* const stream, BracketVisitor* const visitor)
+static StreamChar visitMultiLineComment(BracketStream* const stream,
+                                        BracketVisitor* const visitor,
+                                        StreamChar sc)
 {
-  VISIT_START('*')
-  VISIT_CHAR('/')
-  VISIT_CHAR('*')
+  VISIT_START(SC('*'))
+  VISIT_CHAR(SC('/'))
+  VISIT_CHAR(SC('*'))
 
   BOOL escaped = TRUE;
 
-  for(CHAR c = NEXT(stream->charStream); c != END_STREAM; c = NEXT(stream->charStream))
+  for(sc = nextChar(stream, sc); sc.c != END_STREAM; sc = nextChar(stream, sc))
   {
-    VISIT_CHAR(c)
+    VISIT_CHAR(sc)
 
-    if(c == '/' && !escaped)
+    if(sc.c == '/' && !escaped)
     {
       VISIT_END('*')
-      return;
+      return sc;
     }
 
-    escaped = c != '*';
+    escaped = sc.c != '*';
   }
 
   VISIT_MISSING('*')
+  return sc;
 }
 //-----------------------------------------------------------------------------

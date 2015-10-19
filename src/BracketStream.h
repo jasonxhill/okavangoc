@@ -6,11 +6,17 @@
 
 #include "CharStream.h"
 //-----------------------------------------------------------------------------
+STRUCT {
+  CHAR c;
+  unsigned int line;
+  unsigned int linePosition;
+} StreamChar;
+//-----------------------------------------------------------------------------
 STRUCT BracketVisitor {
-  void (* const visitBracketStart)(struct BracketVisitor*, CHAR type);
-  void (* const visitBracketEnd)(struct BracketVisitor*, CHAR type);
-  void (* const visitBracketEndMissing)(struct BracketVisitor*, CHAR type);
-  void (* const visitChar)(struct BracketVisitor*, CHAR);
+  void (* const visitBracketStart)(struct BracketVisitor*, StreamChar type);
+  void (* const visitBracketEnd)(struct BracketVisitor*, StreamChar type);
+  void (* const visitBracketEndMissing)(struct BracketVisitor*, StreamChar type);
+  void (* const visitChar)(struct BracketVisitor*, StreamChar c);
 } BracketVisitor;
 //-----------------------------------------------------------------------------
 STRUCT BracketStream {
