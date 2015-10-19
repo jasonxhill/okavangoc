@@ -206,8 +206,10 @@ static StreamChar visitSingleLineComment(BracketStream* const stream,
                                          BracketVisitor* const visitor,
                                          StreamChar sc)
 {
+  sc.linePosition--;
   VISIT_START(sc)
   VISIT_CHAR(sc)
+  sc.linePosition++;
   VISIT_CHAR(sc)
 
   for(sc = nextChar(stream, sc); sc.c != END_STREAM; sc = nextChar(stream, sc))
@@ -229,8 +231,10 @@ static StreamChar visitMultiLineComment(BracketStream* const stream,
                                         BracketVisitor* const visitor,
                                         StreamChar sc)
 {
+  sc.linePosition--;
   VISIT_START(SC('*'))
   VISIT_CHAR(SC('/'))
+  sc.linePosition++;
   VISIT_CHAR(SC('*'))
 
   BOOL escaped = TRUE;
