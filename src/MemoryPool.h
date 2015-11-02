@@ -8,8 +8,8 @@
 //-----------------------------------------------------------------------------
 STRUCT MemoryPool {
   void* head;
-  void* (* const calloc)(struct MemoryPool*, size_t, size_t);
-  void (* const drain)(struct MemoryPool*);
+  void* (* calloc)(struct MemoryPool*, size_t, size_t);
+  void (* drain)(struct MemoryPool*);
 } MemoryPool;
 //-----------------------------------------------------------------------------
 MemoryPool newMemoryPool();

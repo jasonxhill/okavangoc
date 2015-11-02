@@ -21,6 +21,9 @@ STRUCT LinkedList {
   BOOL (*untailable)(const struct LinkedList*);
 
   unsigned int (*size)(const struct LinkedList*);
+
+  void** (*toArray)(const struct LinkedList*, MemoryPool*);
+
   MemoryPool* memoryPool;
 } LinkedList;
 //-----------------------------------------------------------------------------

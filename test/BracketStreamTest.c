@@ -40,19 +40,18 @@ static string appendPos(MemoryPool* const pool, string s, const StreamChar sc)
   return joinStrings(pool, s, posStr);
 }
 //-----------------------------------------------------------------------------
-static void recordBracketVisit(BracketVisitor* const visitor,
+static void recordBracketVisit(TestBracketVisitor* const visitor,
                                const StreamChar type,
                                const string visitType)
 {
-  TestBracketVisitor* const v = (TestBracketVisitor*) visitor;
   char sType[2] = {type.c, 0};
   const string typeString = type.c != END_STREAM? sType : "EOF";
 
-  string s = appendPos(v->pool, v->result, type);
-  s = joinStrings(v->pool, s, visitType);
-  s = joinStrings(v->pool, s, "~");
-  s = joinStrings(v->pool, s, typeString);
-  v->result = joinStrings(v->pool, s, "~\n");
+  string s = appendPos(visitor->pool, visitor->result, type);
+  s = joinStrings(visitor->pool, s, visitType);
+  s = joinStrings(visitor->pool, s, "~");
+  s = joinStrings(visitor->pool, s, typeString);
+  visitor->result = joinStrings(visitor->pool, s, "~\n");
 }
 //-----------------------------------------------------------------------------
 static void appendStatement(TestBracketVisitor* const v, const StreamChar type)
@@ -66,44 +65,40 @@ static void appendStatement(TestBracketVisitor* const v, const StreamChar type)
   v->statement = newStringBuffer(v->pool, "");
 }
 //-----------------------------------------------------------------------------
-static void testVisitBracketStart(BracketVisitor* const visitor, const StreamChar type)
+static void testVisitBracketStart(TestBracketVisitor* const visitor, const StreamChar type)
 {
-  appendStatement((TestBracketVisitor*) visitor, type);
+  appendStatement(visitor, type);
   recordBracketVisit(visitor, type, "BEGIN");
 }
 //-----------------------------------------------------------------------------
-static void testVisitBracketEnd(BracketVisitor* const visitor, const StreamChar type)
+static void testVisitBracketEnd(TestBracketVisitor* const visitor, const StreamChar type)
 {
-  TestBracketVisitor* const v = (TestBracketVisitor*) visitor;
-  appendStatement(v, type);
+  appendStatement(visitor, type);
   recordBracketVisit(visitor, type, "END");
 }
 //-----------------------------------------------------------------------------
-static void testVisitBracketEndMissing(BracketVisitor* const visitor, const StreamChar type)
+static void testVisitBracketEndMissing(TestBracketVisitor* const visitor, const StreamChar type)
 {
-  TestBracketVisitor* const v = (TestBracketVisitor*) visitor;
-  appendStatement(v, type);
+  appendStatement(visitor, type);
   recordBracketVisit(visitor, type, "END_MISSING");
 }
 //-----------------------------------------------------------------------------
-static void testVisitChar(BracketVisitor* const visitor, const StreamChar sc)
+static void testVisitChar(TestBracketVisitor* const visitor, const StreamChar sc)
 {
-  TestBracketVisitor* const v = (TestBracketVisitor*) visitor;
+  if(strcmp(visitor->statement.str, "") == 0)
+    visitor->result = appendPos(visitor->pool, visitor->result, sc);
 
-  if(strcmp(v->statement.str, "") == 0)
-    v->result = appendPos(v->pool, v->result, sc);
-
-  v->statement.appendChar(&(v->statement), sc.c);
+  visitor->statement.appendChar(&(visitor->statement), sc.c);
 }
 //-----------------------------------------------------------------------------
 static TestBracketVisitor newTestBracketVisitor(MemoryPool* const memPool)
 {
   TestBracketVisitor visitor = {
     .self = {
-      .visitBracketStart = &testVisitBracketStart,
-      .visitBracketEnd = testVisitBracketEnd,
-      .visitBracketEndMissing = &testVisitBracketEndMissing,
-      .visitChar = &testVisitChar
+      .visitBracketStart = (BracketVisitStart) &testVisitBracketStart,
+      .visitBracketEnd = (BracketVisitEnd) testVisitBracketEnd,
+      .visitBracketEndMissing = (BracketVisitEndMissing) &testVisitBracketEndMissing,
+      .visitChar = (BracketVisitChar) &testVisitChar
     },
 
     .result = "",

@@ -7,11 +7,13 @@
 //-----------------------------------------------------------------------------
 static void testLinkedList();
 static void testLinkedListTraversal();
+static void testLinkedListToArray();
 //-----------------------------------------------------------------------------
 void mainLinkedListTests()
 {
   TEST(testLinkedList);
   TEST(testLinkedListTraversal);
+  TEST(testLinkedListToArray);
 }
 //-----------------------------------------------------------------------------
 void testLinkedList()
@@ -98,8 +100,29 @@ static void testLinkedListTraversal()
     if(!l.untailable(&l))
       break;
   }
-//
+
   assertEquals(string, "valE,valD,valC,valB,valA,", s);
+
+  pool.drain(&pool);
+}
+//-----------------------------------------------------------------------------
+void testLinkedListToArray()
+{
+  MemoryPool pool = newMemoryPool();
+
+  LinkedList list = newLinkedList(&pool);
+  list.append(&list, "valA,")
+      .append(&list, "valB,")
+      .append(&list, "valC,")
+      .append(&list, "valD,")
+      .append(&list, "valE,");
+
+  string result = "";
+
+  for(string* s = (string*) list.toArray(&list, &pool); *s != NULL; s++)
+    result = joinStrings(&pool, result, *s);
+
+  assertEquals(string, "valA,valB,valC,valD,valE,", result);
 
   pool.drain(&pool);
 }

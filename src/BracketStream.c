@@ -4,6 +4,10 @@
 #include "BracketStream.h"
 #include "String.h"
 //-----------------------------------------------------------------------------
+const string bracketStreamBeginBrackets = "{[(";
+const string bracketStreamEndBrackets = "}])";
+const string bracketStreamQuoteChars = "\"'`";
+//-----------------------------------------------------------------------------
 static void visit(BracketStream*, BracketVisitor*);
 static StreamChar visitBracket(BracketStream*, BracketVisitor*, StreamChar, CHAR, StreamChar);
 static StreamChar visitQuotedToken(BracketStream*, BracketVisitor*, StreamChar);
@@ -64,10 +68,6 @@ static StreamChar visitBracket(BracketStream* const stream,
                                const CHAR endChar,
                                StreamChar sc)
 {
-  const string beginBrackets = "{[(";
-  const string endBrackets = "}])";
-  const string quoteChars = "\"'`";
-
   VISIT_START(type)
   BOOL startStatementNeeded = TRUE;
   BOOL commentIndicator = FALSE;
@@ -82,7 +82,7 @@ static StreamChar visitBracket(BracketStream* const stream,
       VISIT_END(type.c)
       return replaceChar(sc, NO_CHAR);
     }
-    if(containsChar(sc.c, endBrackets))
+    if(containsChar(sc.c, bracketStreamEndBrackets))
     {
       END_STATEMENT
       VISIT_MISSING(type.c)
@@ -127,21 +127,21 @@ static StreamChar visitBracket(BracketStream* const stream,
     }
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     // Check for quotes
-    if(containsChar(sc.c, quoteChars))
+    if(containsChar(sc.c, bracketStreamQuoteChars))
     {
       sc = visitQuotedToken(stream, visitor, sc);
       continue;
     }
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     // Check for start of nested bracket
-    if(!containsChar(sc.c, beginBrackets))
+    if(!containsChar(sc.c, bracketStreamBeginBrackets))
     {
       VISIT_CHAR(sc)
       continue;
     }
     //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
     // Start a nested bracket
-    const CHAR endBracket = endBrackets[charStringPos(sc.c, 0, beginBrackets)];
+    const CHAR endBracket = bracketStreamEndBrackets[charStringPos(sc.c, 0, bracketStreamBeginBrackets)];
     sc = visitBracket(stream, visitor, sc, endBracket, nextChar(stream, sc));
 
     if(sc.c == NO_CHAR)

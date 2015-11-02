@@ -25,6 +25,8 @@ static BOOL isUntailable(const LinkedList*);
 static unsigned int getSize(const LinkedList*);
 static unsigned int getNodeCount(const LinkedListNode*);
 //-----------------------------------------------------------------------------
+static void** listToArray(const LinkedList*, MemoryPool*);
+//-----------------------------------------------------------------------------
 LinkedList newLinkedList(MemoryPool* const pool)
 {
   LinkedList list = {
@@ -42,6 +44,8 @@ LinkedList newLinkedList(MemoryPool* const pool)
     .untailable = &isUntailable,
 
     .size = &getSize,
+    .toArray = &listToArray,
+
     .memoryPool = pool
   };
 
@@ -134,5 +138,16 @@ static unsigned int getSize(const LinkedList* const list)
 static unsigned int getNodeCount(const LinkedListNode* const node)
 {
   return node != NULL? getNodeCount(node->next) + 1 : 0;
+}
+//-----------------------------------------------------------------------------
+static void** listToArray(const LinkedList* const list, MemoryPool* const pool)
+{
+  void** const array = pool->calloc(pool, getSize(list) + 1, sizeof(void*));
+  void** i = array;
+
+  for(LinkedList l = *list; !l.empty(&l); l = l.tail(&l), i++)
+    *i = l.head(&l);
+
+  return array;
 }
 //-----------------------------------------------------------------------------

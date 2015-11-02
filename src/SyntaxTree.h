@@ -3,24 +3,45 @@
 //=============================================================================
 #ifndef SRC_SYNTAXTREE_H_
 #define SRC_SYNTAXTREE_H_
-#include "TokenStream.h"
+#include "MemoryPool.h"
+#include "CharStream.h"
 //-----------------------------------------------------------------------------
-typedef string Key;
+struct Statement;
+//-----------------------------------------------------------------------------
+typedef enum StatementComponentType {
+  curlyBrace = 0,
+  squareBracket = 1,
+  parentheses = 2,
+  fileBracket,
+  token,
+  unknown
+} StatementComponentType;
 //-----------------------------------------------------------------------------
 STRUCT {
-  Key key;
-} Pair;
+  StatementComponentType type;
+  struct Statement* parent;
+} StatementComponent;
 //-----------------------------------------------------------------------------
 STRUCT {
-  Pair pair;
-  Pair* nextPair;
-} PairList;
+  StatementComponent statementComponent;
+  struct Statement** statements;
+} Bracket;
+//-----------------------------------------------------------------------------
+STRUCT Statement {
+  Bracket* parent;
+  StatementComponent** components;
+} Statement;
 //-----------------------------------------------------------------------------
 STRUCT {
-  Pair* root;
+  StatementComponent statementComponent;
+  string value;
+} Token;
+//-----------------------------------------------------------------------------
+STRUCT {
+  Bracket* root;
 } SyntaxTree;
 //-----------------------------------------------------------------------------
-SyntaxTree toSyntaxTree(CharStream);
+SyntaxTree newSyntaxTree(MemoryPool*, CharStream*);
 //-----------------------------------------------------------------------------
 #endif // SRC_SYNTAXTREE_H_
 //-----------------------------------------------------------------------------
