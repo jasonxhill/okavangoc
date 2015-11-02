@@ -82,7 +82,7 @@ static void visitBracketStart(SyntaxTreeVisitor* const visitor, const StreamChar
 
   if(strcmp("", stackFrame->parent->token.str) != 0)
   {
-    stackFrame->parent->list.append(&stackFrame->parent->list, newToken(visitor, stackFrame));
+    stackFrame->parent->list.append(&stackFrame->parent->list, newToken(visitor, stackFrame->parent));
     stackFrame->parent->token = newStringBuffer(&stackFrame->parent->pool, "");
   }
 

@@ -20,12 +20,12 @@ static void testSyntaxTree()
   MemoryPool pool = newMemoryPool();
 
   string code =
-    "statement A;"
-    "{"
-    "  statement B;"
-    "  statement C[1];"
-    "  statement D(r,x) + 20;"
-    "};";
+    "statement A;\n"
+    "{\n"
+    "  statement B;\n"
+    "  statement C[1];\n"
+    "  statement D(r,x) + 20;\n"
+    "};\n";
 
   InMemoryCharStream charStream = newInMemoryCharStream(code);
   SyntaxTree tree = newSyntaxTree(&pool, &charStream.stream);
@@ -41,11 +41,13 @@ static void testSyntaxTree()
     "statement A\n"
     "END_STATEMENT\n"
     "START_STATEMENT\n"
+    "\n\n"
     "START_BRACKET(curlyBrace)\n"
     "START_STATEMENT\n"
-    "  statement B\n"
+    "\n  statement B\n"
     "END_STATEMENT\n"
     "START_STATEMENT\n"
+    "\n  statement C\n"
     "START_BRACKET(squareBracket)\n"
     "START_STATEMENT\n"
     "1\n"
@@ -53,13 +55,21 @@ static void testSyntaxTree()
     "END_BRACKET(squareBracket)\n"
     "END_STATEMENT\n"
     "START_STATEMENT\n"
+    "\n  statement D\n"
     "START_BRACKET(parentheses)\n"
     "START_STATEMENT\n"
     "r,x\n"
     "END_STATEMENT\n"
-    "END_BRACKET(parentheses) + 20\n"
+    "END_BRACKET(parentheses)\n"
+     " + 20\n"
+    "END_STATEMENT\n"
+    "START_STATEMENT\n"
+    "\n\n"
     "END_STATEMENT\n"
     "END_BRACKET(curlyBrace)\n"
+    "END_STATEMENT\n"
+    "START_STATEMENT\n"
+    "\n\n"
     "END_STATEMENT\n"
     "END_BRACKET(fileBracket)\n",
     result);
@@ -69,8 +79,7 @@ static void testSyntaxTree()
 //-----------------------------------------------------------------------------
 static string bracketToString(MemoryPool* const pool, Bracket* const bracket)
 {
-  string str = "";
-  str = joinStrings(pool, str, "START_BRACKET(");
+  string str = "START_BRACKET(";
   str = joinStrings(pool, str, statementComponentTypeToString(bracket->statementComponent.type));
   str = joinStrings(pool, str, ")\n");
 
@@ -89,12 +98,13 @@ static string statementToString(MemoryPool* const pool, Statement* const stateme
   str = joinStrings(pool, str, "START_STATEMENT\n");
 
   for(StatementComponent** s = statement->components; *s != NULL; s++)
-    str = (*s)->type == token?
-      joinStrings(pool, str, ((Token*) *s)->value)
-    :
-      joinStrings(pool, str, bracketToString(pool, (Bracket*) *s));
+  {
+    string component = (*s)->type == token? ((Token*) *s)->value : bracketToString(pool, (Bracket*) *s);
+    str = joinStrings(pool, str, component);
+    str = joinStrings(pool, str, "\n");
+  }
 
-  str = joinStrings(pool, str, "\nEND_STATEMENT\n");
+  str = joinStrings(pool, str, "END_STATEMENT\n");
   return str;
 }
 //-----------------------------------------------------------------------------
