@@ -13,7 +13,7 @@ void mainSyntaxTreeTests()
 //-----------------------------------------------------------------------------
 static string bracketToString(MemoryPool*, Bracket*);
 static string statementToString(MemoryPool*, Statement*);
-static string statementComponentTypeToString(StatementComponentType);
+static string bracketTokenTypeToString(BracketTokenType);
 //-----------------------------------------------------------------------------
 static void testSyntaxTree()
 {
@@ -90,14 +90,14 @@ static void testSyntaxTree()
 static string bracketToString(MemoryPool* const pool, Bracket* const bracket)
 {
   string str = "START_BRACKET(";
-  str = joinStrings(pool, str, statementComponentTypeToString(bracket->statementComponent.type));
+  str = joinStrings(pool, str, bracketTokenTypeToString(bracket->statementComponent.type));
   str = joinStrings(pool, str, ")\n");
 
   for(Statement** s = bracket->statements; *s != NULL; s++)
     str = joinStrings(pool, str, statementToString(pool, *s));
 
   str = joinStrings(pool, str, "END_BRACKET(");
-  str = joinStrings(pool, str, statementComponentTypeToString(bracket->statementComponent.type));
+  str = joinStrings(pool, str, bracketTokenTypeToString(bracket->statementComponent.type));
   str = joinStrings(pool, str, ")");
   return str;
 }
@@ -118,28 +118,22 @@ static string statementToString(MemoryPool* const pool, Statement* const stateme
   return str;
 }
 //-----------------------------------------------------------------------------
-static string statementComponentTypeToString(StatementComponentType type)
+#define CASE(VAR) case VAR: return #VAR;
+
+static string bracketTokenTypeToString(const BracketTokenType type)
 {
   switch(type)
   {
-    case curlyBrace:
-      return "curlyBrace";
-    case squareBracket:
-      return "squareBracket";
-    case parentheses:
-      return "parentheses";
-    case fileBracket:
-      return "fileBracket";
-    case singleLineComment:
-      return "singleLineComment";
-    case multiLineComment:
-      return "multiLineComment";
-    case token:
-      return "token";
-    case unknown:
-      return "unknown";
-    default:
-      return "undefined";
+    CASE(curlyBrace)
+    CASE(squareBracket)
+    CASE(parentheses)
+    CASE(fileBracket)
+    CASE(singleLineComment)
+    CASE(multiLineComment)
+    CASE(token)
+    CASE(unknown)
+    default: return "undefined";
   }
 }
+#undef CASE
 //-----------------------------------------------------------------------------

@@ -40,19 +40,36 @@ static string appendPos(MemoryPool* const pool, string s, const StreamChar sc)
   return joinStrings(pool, s, posStr);
 }
 //-----------------------------------------------------------------------------
+#define CASE(S,E) case E: typeString = S; break;
+
 static void recordBracketVisit(TestBracketVisitor* const visitor,
-                               const StreamChar type,
+                               const StreamChar sc,
                                const string visitType)
 {
-  char sType[2] = {type.c, 0};
-  const string typeString = type.c != END_STREAM? sType : "EOF";
+  string typeString;
 
-  string s = appendPos(visitor->pool, visitor->result, type);
+  switch(sc.type)
+  {
+    CASE("{", curlyBrace)
+    CASE("[", squareBracket)
+    CASE("(", parentheses)
+    CASE(";", statement)
+    CASE("EOF", fileBracket)
+    CASE("\"", doubleQuote)
+    CASE("'", singleQuote)
+    CASE("`", backtick)
+    CASE("/", singleLineComment)
+    CASE("*", multiLineComment)
+    default: typeString = "UNKNOWN";
+  }
+
+  string s = appendPos(visitor->pool, visitor->result, sc);
   s = joinStrings(visitor->pool, s, visitType);
   s = joinStrings(visitor->pool, s, "~");
   s = joinStrings(visitor->pool, s, typeString);
   visitor->result = joinStrings(visitor->pool, s, "~\n");
 }
+#undef CASE
 //-----------------------------------------------------------------------------
 static void appendStatement(TestBracketVisitor* const v, const StreamChar type)
 {

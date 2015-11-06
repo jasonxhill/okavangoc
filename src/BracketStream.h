@@ -6,12 +6,28 @@
 
 #include "CharStream.h"
 //-----------------------------------------------------------------------------
+typedef enum BracketTokenType {
+  curlyBrace,
+  squareBracket,
+  parentheses,
+  statement,
+  fileBracket,
+  doubleQuote,
+  singleQuote,
+  backtick,
+  singleLineComment,
+  multiLineComment,
+  token,
+  unknown
+} BracketTokenType;
+//-----------------------------------------------------------------------------
 extern const string bracketStreamBeginBrackets;
 extern const string bracketStreamEndBrackets;
 extern const string bracketStreamQuoteChars;
 //-----------------------------------------------------------------------------
 STRUCT {
   CHAR c;
+  BracketTokenType type;
   unsigned int line;
   unsigned int linePosition;
 } StreamChar;

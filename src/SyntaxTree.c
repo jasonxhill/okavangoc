@@ -57,7 +57,7 @@ SyntaxTree newSyntaxTree(MemoryPool* const treePool, CharStream* const charStrea
   return tree;
 }
 //-----------------------------------------------------------------------------
-static void visitBracketStart(SyntaxTreeVisitor* const visitor, const StreamChar type)
+static void visitBracketStart(SyntaxTreeVisitor* const visitor, const StreamChar sc)
 {
   SyntaxTreeStackFrame* stackFrame;
   {
@@ -72,7 +72,7 @@ static void visitBracketStart(SyntaxTreeVisitor* const visitor, const StreamChar
   stackFrame->list = newLinkedList(&stackFrame->pool);
   stackFrame->token = newStringBuffer(&stackFrame->pool, "");
 
-  if(type.c == ';')
+  if(sc.c == ';')
   {
     stackFrame->statement = visitor->pool->calloc(visitor->pool, 1, sizeof(Statement));
     stackFrame->statement->parent = stackFrame->parent->bracket;
@@ -89,19 +89,8 @@ static void visitBracketStart(SyntaxTreeVisitor* const visitor, const StreamChar
   stackFrame->bracket = visitor->pool->calloc(visitor->pool, 1, sizeof(Bracket));
   stackFrame->bracket->statementComponent.parent = stackFrame->parent->statement;
   stackFrame->parent->list.append(&stackFrame->parent->list, stackFrame->bracket);
-
-  const int pos = charStringPos(type.c, 0, bracketStreamBeginBrackets);
-
-  if(pos >= 0)
-    stackFrame->bracket->statementComponent.type = curlyBrace + pos;
-  else if(type.c == END_STREAM)
-    stackFrame->bracket->statementComponent.type = fileBracket;
-  else if(type.c == '/')
-    stackFrame->bracket->statementComponent.type = singleLineComment;
-  else if(type.c == '*')
-    stackFrame->bracket->statementComponent.type = multiLineComment;
-  else
-    stackFrame->bracket->statementComponent.type = unknown;}
+  stackFrame->bracket->statementComponent.type = sc.type;
+}
 //-----------------------------------------------------------------------------
 static void visitBracketEnd(SyntaxTreeVisitor* const visitor, const StreamChar type)
 {

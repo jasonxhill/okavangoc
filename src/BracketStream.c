@@ -30,6 +30,27 @@ static StreamChar replaceChar(StreamChar sc, const CHAR replacement)
   return sc;
 }
 //-----------------------------------------------------------------------------
+#define CASE(C,E) case C: sc.type = E; return sc;
+
+static StreamChar setType(StreamChar sc)
+{
+  switch(sc.c)
+  {
+    CASE(';', statement)
+    CASE('{', curlyBrace)
+    CASE('[', squareBracket)
+    CASE('(', parentheses)
+    CASE(END_STREAM, fileBracket)
+    CASE('"', doubleQuote)
+    CASE('\'', singleQuote)
+    CASE('`', backtick)
+    CASE('/', singleLineComment)
+    CASE('*', multiLineComment)
+    default: sc.type = unknown; return sc;
+  }
+}
+#undef CASE
+//-----------------------------------------------------------------------------
 static StreamChar nextChar(BracketStream* const stream, const StreamChar lastChar)
 {
   const CHAR c = stream->charStream->next(stream->charStream);
@@ -37,25 +58,25 @@ static StreamChar nextChar(BracketStream* const stream, const StreamChar lastCha
   if(c == '\0')
     return replaceChar(lastChar, c);
   if(c != '\n') {
-    const StreamChar sc = {.c = c, .line = lastChar.line, .linePosition = lastChar.linePosition + 1};
+    const StreamChar sc = {.c = c, .type = token, .line = lastChar.line, .linePosition = lastChar.linePosition + 1};
     return sc;
   }
 
-  const StreamChar sc = {.c = c, .line = lastChar.line + 1, .linePosition = 0};
+  const StreamChar sc = {.c = c, .type = token, .line = lastChar.line + 1, .linePosition = 0};
   return sc;
 }
 //-----------------------------------------------------------------------------
 static void visit(BracketStream* const stream, BracketVisitor* const visitor)
 {
-  StreamChar firstChar = {.c = END_STREAM, .line = 1, .linePosition = 0};
+  const StreamChar firstChar = {.c = END_STREAM, .type = token, .line = 1, .linePosition = 0};
   visitBracket(stream, visitor, firstChar, END_STREAM, nextChar(stream, firstChar));
 }
 //-----------------------------------------------------------------------------
 #define SC(C) replaceChar(sc, C)
-#define VISIT_START(VAR) visitor->visitBracketStart(visitor, VAR);
-#define VISIT_CHAR(VAR) visitor->visitChar(visitor, VAR);
-#define VISIT_END(VAR) visitor->visitBracketEnd(visitor, replaceChar(sc, VAR));
-#define VISIT_MISSING(VAR) visitor->visitBracketEndMissing(visitor, replaceChar(sc, VAR));
+#define VISIT_START(VAR) visitor->visitBracketStart(visitor, setType(VAR));
+#define VISIT_CHAR(VAR) visitor->visitChar(visitor, setType(VAR));
+#define VISIT_END(VAR) visitor->visitBracketEnd(visitor, setType(SC(VAR)));
+#define VISIT_MISSING(VAR) visitor->visitBracketEndMissing(visitor, setType(SC(VAR)));
 //-----------------------------------------------------------------------------
 #define END_STATEMENT if(!startStatementNeeded)\
                       {                        \
@@ -80,7 +101,7 @@ static StreamChar visitBracket(BracketStream* const stream,
     {
       END_STATEMENT
       VISIT_END(type.c)
-      return replaceChar(sc, NO_CHAR);
+      return SC(NO_CHAR);
     }
     if(containsChar(sc.c, bracketStreamEndBrackets))
     {
@@ -153,7 +174,7 @@ static StreamChar visitBracket(BracketStream* const stream,
     if(sc.c == endChar)
     {
       VISIT_END(type.c)
-      return replaceChar(sc, NO_CHAR);
+      return SC(NO_CHAR);
     }
 
     VISIT_MISSING(type.c)
@@ -166,7 +187,7 @@ static StreamChar visitBracket(BracketStream* const stream,
   // No closing bracket was found
   END_STATEMENT
   VISIT_MISSING(type.c)
-  return replaceChar(sc, NO_CHAR);
+  return SC(NO_CHAR);
   //. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 }
 //-----------------------------------------------------------------------------
