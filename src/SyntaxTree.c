@@ -98,7 +98,12 @@ static void visitBracketEnd(SyntaxTreeVisitor* const visitor, const StreamChar t
   visitor->stackFrame = visitor->stackFrame->parent;
 
   if(stackFrame->bracket != NULL)
+  {
     stackFrame->bracket->statements = (Statement**) stackFrame->list.toArray(&stackFrame->list, visitor->pool);
+
+    stackFrame->bracket->statementComponent.value = strcmp("", stackFrame->token.str) != 0?
+        stackFrame->token.toString(&stackFrame->token, visitor->pool) : NULL;
+  }
   else if(stackFrame->statement != NULL)
   {
     if(strcmp("", stackFrame->token.str) != 0)
@@ -125,7 +130,7 @@ static Token* newToken(SyntaxTreeVisitor* const visitor, SyntaxTreeStackFrame* c
   Token* const t = visitor->pool->calloc(visitor->pool, 1, sizeof(Token));
   t->statementComponent.type = token;
   t->statementComponent.parent = stackFrame->parent->statement;
-  t->value = stackFrame->token.toString(&stackFrame->token, visitor->pool);
+  t->statementComponent.value = stackFrame->token.toString(&stackFrame->token, visitor->pool);
   return t;
 }
 //-----------------------------------------------------------------------------

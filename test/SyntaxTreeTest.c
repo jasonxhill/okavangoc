@@ -53,6 +53,7 @@ static void testSyntaxTree()
     "START_STATEMENT\n"
     "\n  \n"
     "START_BRACKET(singleLineComment)\n"
+    "// A test comment\n\n"
     "END_BRACKET(singleLineComment)\n"
     "  statement B\n"
     "END_STATEMENT\n"
@@ -67,6 +68,9 @@ static void testSyntaxTree()
     "START_STATEMENT\n"
     "\n  \n"
     "START_BRACKET(multiLineComment)\n"
+    "/*\n"
+    "    multiline comment\n"
+    "  */\n"
     "END_BRACKET(multiLineComment)\n"
     "\n  statement D\n"
     "START_BRACKET(parentheses)\n"
@@ -79,16 +83,19 @@ static void testSyntaxTree()
     "START_STATEMENT\n"
     "\n  \n"
     "START_BRACKET(doubleQuote)\n"
+    "\"A test string\"\n"
     "END_BRACKET(doubleQuote)\n"
     "END_STATEMENT\n"
     "START_STATEMENT\n"
     "\n  \n"
     "START_BRACKET(singleQuote)\n"
+    "'A test string'\n"
     "END_BRACKET(singleQuote)\n"
     "END_STATEMENT\n"
     "START_STATEMENT\n"
     "\n  \n"
     "START_BRACKET(backtick)\n"
+    "`A test string`\n"
     "END_BRACKET(backtick)\n"
     "END_STATEMENT\n"
     "START_STATEMENT\n"
@@ -114,6 +121,12 @@ static string bracketToString(MemoryPool* const pool, Bracket* const bracket)
   for(Statement** s = bracket->statements; *s != NULL; s++)
     str = joinStrings(pool, str, statementToString(pool, *s));
 
+  if(bracket->statementComponent.value != NULL)
+  {
+    str = joinStrings(pool, str, bracket->statementComponent.value);
+    str = joinStrings(pool, str, "\n");
+  }
+
   str = joinStrings(pool, str, "END_BRACKET(");
   str = joinStrings(pool, str, bracketTokenTypeToString(bracket->statementComponent.type));
   str = joinStrings(pool, str, ")");
@@ -127,7 +140,7 @@ static string statementToString(MemoryPool* const pool, Statement* const stateme
 
   for(StatementComponent** s = statement->components; *s != NULL; s++)
   {
-    string component = (*s)->type == token? ((Token*) *s)->value : bracketToString(pool, (Bracket*) *s);
+    string component = (*s)->type == token? (*s)->value : bracketToString(pool, (Bracket*) *s);
     str = joinStrings(pool, str, component);
     str = joinStrings(pool, str, "\n");
   }

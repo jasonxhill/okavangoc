@@ -10,6 +10,7 @@ struct Statement;
 //-----------------------------------------------------------------------------
 STRUCT {
   BracketTokenType type;
+  string value;
   struct Statement* parent;
 } StatementComponent;
 //-----------------------------------------------------------------------------
@@ -25,7 +26,6 @@ STRUCT Statement {
 //-----------------------------------------------------------------------------
 STRUCT {
   StatementComponent statementComponent;
-  string value;
 } Token;
 //-----------------------------------------------------------------------------
 STRUCT {
