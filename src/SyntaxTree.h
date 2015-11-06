@@ -13,6 +13,8 @@ typedef enum StatementComponentType {
   squareBracket = 1,
   parentheses = 2,
   fileBracket,
+  singleLineComment,
+  multiLineComment,
   token,
   unknown
 } StatementComponentType;

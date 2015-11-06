@@ -96,6 +96,10 @@ static void visitBracketStart(SyntaxTreeVisitor* const visitor, const StreamChar
     stackFrame->bracket->statementComponent.type = curlyBrace + pos;
   else if(type.c == END_STREAM)
     stackFrame->bracket->statementComponent.type = fileBracket;
+  else if(type.c == '/')
+    stackFrame->bracket->statementComponent.type = singleLineComment;
+  else if(type.c == '*')
+    stackFrame->bracket->statementComponent.type = multiLineComment;
   else
     stackFrame->bracket->statementComponent.type = unknown;}
 //-----------------------------------------------------------------------------

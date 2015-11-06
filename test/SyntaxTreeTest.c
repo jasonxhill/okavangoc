@@ -22,8 +22,12 @@ static void testSyntaxTree()
   string code =
     "statement A;\n"
     "{\n"
+    "  // A test comment\n"
     "  statement B;\n"
     "  statement C[1];\n"
+    "  /*\n"
+    "    multiline comment\n"
+    "  */\n"
     "  statement D(r,x) + 20;\n"
     "};\n";
 
@@ -44,7 +48,10 @@ static void testSyntaxTree()
     "\n\n"
     "START_BRACKET(curlyBrace)\n"
     "START_STATEMENT\n"
-    "\n  statement B\n"
+    "\n  \n"
+    "START_BRACKET(singleLineComment)\n"
+    "END_BRACKET(singleLineComment)\n"
+    "  statement B\n"
     "END_STATEMENT\n"
     "START_STATEMENT\n"
     "\n  statement C\n"
@@ -55,6 +62,9 @@ static void testSyntaxTree()
     "END_BRACKET(squareBracket)\n"
     "END_STATEMENT\n"
     "START_STATEMENT\n"
+    "\n  \n"
+    "START_BRACKET(multiLineComment)\n"
+    "END_BRACKET(multiLineComment)\n"
     "\n  statement D\n"
     "START_BRACKET(parentheses)\n"
     "START_STATEMENT\n"
@@ -120,6 +130,10 @@ static string statementComponentTypeToString(StatementComponentType type)
       return "parentheses";
     case fileBracket:
       return "fileBracket";
+    case singleLineComment:
+      return "singleLineComment";
+    case multiLineComment:
+      return "multiLineComment";
     case token:
       return "token";
     case unknown:
