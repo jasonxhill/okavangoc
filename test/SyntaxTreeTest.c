@@ -29,6 +29,9 @@ static void testSyntaxTree()
     "    multiline comment\n"
     "  */\n"
     "  statement D(r,x) + 20;\n"
+    "  \"A test string\";\n"
+    "  'A test string';\n"
+    "  `A test string`;\n"
     "};\n";
 
   InMemoryCharStream charStream = newInMemoryCharStream(code);
@@ -72,6 +75,21 @@ static void testSyntaxTree()
     "END_STATEMENT\n"
     "END_BRACKET(parentheses)\n"
      " + 20\n"
+    "END_STATEMENT\n"
+    "START_STATEMENT\n"
+    "\n  \n"
+    "START_BRACKET(doubleQuote)\n"
+    "END_BRACKET(doubleQuote)\n"
+    "END_STATEMENT\n"
+    "START_STATEMENT\n"
+    "\n  \n"
+    "START_BRACKET(singleQuote)\n"
+    "END_BRACKET(singleQuote)\n"
+    "END_STATEMENT\n"
+    "START_STATEMENT\n"
+    "\n  \n"
+    "START_BRACKET(backtick)\n"
+    "END_BRACKET(backtick)\n"
     "END_STATEMENT\n"
     "START_STATEMENT\n"
     "\n\n"
@@ -130,6 +148,9 @@ static string bracketTokenTypeToString(const BracketTokenType type)
     CASE(fileBracket)
     CASE(singleLineComment)
     CASE(multiLineComment)
+    CASE(doubleQuote)
+    CASE(singleQuote)
+    CASE(backtick)
     CASE(token)
     CASE(unknown)
     default: return "undefined";
