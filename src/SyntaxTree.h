@@ -10,22 +10,30 @@ struct Statement;
 //-----------------------------------------------------------------------------
 STRUCT {
   BracketTokenType type;
-  string value;
+  BOOL endTokenMissing;
+  StreamPosition startPosition;
+  StreamPosition endPosition;
+} AbstractBracketComponent;
+//-----------------------------------------------------------------------------
+STRUCT {
+  AbstractBracketComponent super;
   struct Statement* parent;
+  string value;
 } StatementComponent;
 //-----------------------------------------------------------------------------
 STRUCT {
-  StatementComponent statementComponent;
+  StatementComponent super;
   struct Statement** statements;
 } Bracket;
 //-----------------------------------------------------------------------------
 STRUCT Statement {
+  AbstractBracketComponent super;
   Bracket* parent;
   StatementComponent** components;
 } Statement;
 //-----------------------------------------------------------------------------
 STRUCT {
-  StatementComponent statementComponent;
+  StatementComponent super;
 } Token;
 //-----------------------------------------------------------------------------
 STRUCT {

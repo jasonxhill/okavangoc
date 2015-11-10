@@ -58,17 +58,34 @@ static StreamChar nextChar(BracketStream* const stream, const StreamChar lastCha
   if(c == '\0')
     return replaceChar(lastChar, c);
   if(c != '\n') {
-    const StreamChar sc = {.c = c, .type = token, .line = lastChar.line, .linePosition = lastChar.linePosition + 1};
+    const StreamChar sc = {
+      .c = c,
+      .type = token,
+      .position = {
+        .line = lastChar.position.line,
+          .linePosition = lastChar.position.linePosition + 1}
+    };
+
     return sc;
   }
 
-  const StreamChar sc = {.c = c, .type = token, .line = lastChar.line + 1, .linePosition = 0};
+  const StreamChar sc = {
+    .c = c,
+    .type = token,
+    .position = {.line = lastChar.position.line + 1, .linePosition = 0}
+  };
+
   return sc;
 }
 //-----------------------------------------------------------------------------
 static void visit(BracketStream* const stream, BracketVisitor* const visitor)
 {
-  const StreamChar firstChar = {.c = END_STREAM, .type = token, .line = 1, .linePosition = 0};
+  const StreamChar firstChar = {
+    .c = END_STREAM,
+    .type = token,
+    .position = {.line = 1, .linePosition = 0}
+  };
+
   visitBracket(stream, visitor, firstChar, END_STREAM, nextChar(stream, firstChar));
 }
 //-----------------------------------------------------------------------------
@@ -227,10 +244,10 @@ static StreamChar visitSingleLineComment(BracketStream* const stream,
                                          BracketVisitor* const visitor,
                                          StreamChar sc)
 {
-  sc.linePosition--;
+  sc.position.linePosition--;
   VISIT_START(sc)
   VISIT_CHAR(sc)
-  sc.linePosition++;
+  sc.position.linePosition++;
   VISIT_CHAR(sc)
 
   for(sc = nextChar(stream, sc); sc.c != END_STREAM; sc = nextChar(stream, sc))
@@ -252,10 +269,10 @@ static StreamChar visitMultiLineComment(BracketStream* const stream,
                                         BracketVisitor* const visitor,
                                         StreamChar sc)
 {
-  sc.linePosition--;
+  sc.position.linePosition--;
   VISIT_START(SC('*'))
   VISIT_CHAR(SC('/'))
-  sc.linePosition++;
+  sc.position.linePosition++;
   VISIT_CHAR(SC('*'))
 
   BOOL escaped = TRUE;

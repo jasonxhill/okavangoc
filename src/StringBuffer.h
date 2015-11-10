@@ -10,6 +10,7 @@
 STRUCT StringBuffer {
   string str;
   unsigned int size;
+  struct StringBuffer (*append)(struct StringBuffer*, string);
   struct StringBuffer (*appendChar)(struct StringBuffer*, CHAR);
   string (*toString)(struct StringBuffer*, MemoryPool*);
   MemoryPool* memoryPool;

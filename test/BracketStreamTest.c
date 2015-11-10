@@ -36,7 +36,7 @@ STRUCT TestBracketVisitor {
 static string appendPos(MemoryPool* const pool, string s, const StreamChar sc)
 {
   CHAR posStr[10];
-  sprintf(posStr, "%i:%i:", sc.line, sc.linePosition);
+  sprintf(posStr, "%i:%i:", sc.position.line, sc.position.linePosition);
   return joinStrings(pool, s, posStr);
 }
 //-----------------------------------------------------------------------------

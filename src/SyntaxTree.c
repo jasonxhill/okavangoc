@@ -11,6 +11,7 @@ STRUCT SyntaxTreeStackFrame {
   MemoryPool pool;
   LinkedList list;
   struct SyntaxTreeStackFrame* parent;
+  AbstractBracketComponent* component;
   Bracket* bracket;
   Statement* statement;
   StringBuffer token;
@@ -69,40 +70,44 @@ static void visitBracketStart(SyntaxTreeVisitor* const visitor, const StreamChar
   stackFrame->parent = visitor->stackFrame;
   visitor->stackFrame = stackFrame;
 
-  stackFrame->list = newLinkedList(&stackFrame->pool);
-  stackFrame->token = newStringBuffer(&stackFrame->pool, "");
-
   if(sc.c == ';')
   {
     stackFrame->statement = visitor->pool->calloc(visitor->pool, 1, sizeof(Statement));
+    stackFrame->component = &stackFrame->statement->super;
     stackFrame->statement->parent = stackFrame->parent->bracket;
-    stackFrame->parent->list.append(&stackFrame->parent->list, stackFrame->statement);
-    return;
   }
-
-  if(strcmp("", stackFrame->parent->token.str) != 0)
+  else
   {
-    stackFrame->parent->list.append(&stackFrame->parent->list, newToken(visitor, stackFrame->parent));
-    stackFrame->parent->token = newStringBuffer(&stackFrame->parent->pool, "");
+    stackFrame->bracket = visitor->pool->calloc(visitor->pool, 1, sizeof(Bracket));
+    stackFrame->component = &stackFrame->bracket->super.super;
+    stackFrame->bracket->super.parent = stackFrame->parent->statement;
+
+    if(strcmp("", stackFrame->parent->token.str) != 0)
+    {
+      stackFrame->parent->list.append(&stackFrame->parent->list, newToken(visitor, stackFrame->parent));
+      stackFrame->parent->token = newStringBuffer(&stackFrame->parent->pool, "");
+    }
   }
 
-  stackFrame->bracket = visitor->pool->calloc(visitor->pool, 1, sizeof(Bracket));
-  stackFrame->bracket->statementComponent.parent = stackFrame->parent->statement;
-  stackFrame->parent->list.append(&stackFrame->parent->list, stackFrame->bracket);
-  stackFrame->bracket->statementComponent.type = sc.type;
+  stackFrame->component->type = sc.type;
+  stackFrame->parent->list.append(&stackFrame->parent->list, stackFrame->component);
+  stackFrame->component->startPosition = sc.position;
+  stackFrame->list = newLinkedList(&stackFrame->pool);
+  stackFrame->token = newStringBuffer(&stackFrame->pool, "");
 }
 //-----------------------------------------------------------------------------
-static void visitBracketEnd(SyntaxTreeVisitor* const visitor, const StreamChar type)
+static void visitBracketEnd(SyntaxTreeVisitor* const visitor, const StreamChar sc)
 {
   SyntaxTreeStackFrame* const stackFrame = visitor->stackFrame;
   visitor->stackFrame = visitor->stackFrame->parent;
+  stackFrame->component->endPosition = sc.position;
 
   if(stackFrame->bracket != NULL)
   {
-    stackFrame->bracket->statements = (Statement**) stackFrame->list.toArray(&stackFrame->list, visitor->pool);
+    if(strcmp("", stackFrame->token.str) != 0)
+      stackFrame->bracket->super.value = stackFrame->token.toString(&stackFrame->token, visitor->pool);
 
-    stackFrame->bracket->statementComponent.value = strcmp("", stackFrame->token.str) != 0?
-        stackFrame->token.toString(&stackFrame->token, visitor->pool) : NULL;
+    stackFrame->bracket->statements = (Statement**) stackFrame->list.toArray(&stackFrame->list, visitor->pool);
   }
   else if(stackFrame->statement != NULL)
   {
@@ -117,6 +122,7 @@ static void visitBracketEnd(SyntaxTreeVisitor* const visitor, const StreamChar t
 //-----------------------------------------------------------------------------
 static void visitBracketEndMissing(SyntaxTreeVisitor* const visitor, const StreamChar type)
 {
+  visitor->stackFrame->component->endTokenMissing = TRUE;
   visitBracketEnd(visitor, type);
 }
 //-----------------------------------------------------------------------------
@@ -128,9 +134,9 @@ static void visitChar(SyntaxTreeVisitor* const visitor, const StreamChar streamC
 static Token* newToken(SyntaxTreeVisitor* const visitor, SyntaxTreeStackFrame* const stackFrame)
 {
   Token* const t = visitor->pool->calloc(visitor->pool, 1, sizeof(Token));
-  t->statementComponent.type = token;
-  t->statementComponent.parent = stackFrame->parent->statement;
-  t->statementComponent.value = stackFrame->token.toString(&stackFrame->token, visitor->pool);
+  t->super.super.type = token;
+  t->super.parent = stackFrame->parent->statement;
+  t->super.value = stackFrame->token.toString(&stackFrame->token, visitor->pool);
   return t;
 }
 //-----------------------------------------------------------------------------

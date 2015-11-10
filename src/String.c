@@ -2,6 +2,7 @@
 // String.c
 //=============================================================================
 #include "String.h"
+#include <stdio.h>
 //-----------------------------------------------------------------------------
 string newString(MemoryPool* const pool, const unsigned long size)
 {
@@ -14,12 +15,25 @@ string copyString(MemoryPool* const pool, const string str, const unsigned long 
   return strncpy(newString(pool, size), str, len >= size? size : len);
 }
 //-----------------------------------------------------------------------------
+string duplicateString(MemoryPool* const pool, const string str)
+{
+  const unsigned long len = strlen(str);
+  return strncpy(newString(pool, len), str, len);
+}
+//-----------------------------------------------------------------------------
 string joinStrings(MemoryPool* const pool, const string a, const string b)
 {
   unsigned int alen = strlen(a);
   string copy = copyString(pool, a, alen + strlen(b));
   strcpy(copy + alen, b);
   return copy;
+}
+//-----------------------------------------------------------------------------
+string intToString(MemoryPool* const pool, const int i)
+{
+  CHAR buffer[12];
+  sprintf(buffer, "%i", i);
+  return duplicateString(pool, buffer);
 }
 //-----------------------------------------------------------------------------
 BOOL containsChar(const CHAR c, const string s)

@@ -9,7 +9,9 @@
 //-----------------------------------------------------------------------------
 string newString(MemoryPool*, unsigned long size);
 string copyString(MemoryPool*, const string, unsigned long size);
+string duplicateString(MemoryPool*, const string);
 string joinStrings(MemoryPool*, const string, const string);
+string intToString(MemoryPool*, int);
 BOOL containsChar(CHAR, const string);
 int charStringPos(CHAR, unsigned int start, const string);
 unsigned long hashString(const string);

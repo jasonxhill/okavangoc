@@ -26,10 +26,14 @@ extern const string bracketStreamEndBrackets;
 extern const string bracketStreamQuoteChars;
 //-----------------------------------------------------------------------------
 STRUCT {
-  CHAR c;
-  BracketTokenType type;
   unsigned int line;
   unsigned int linePosition;
+} StreamPosition;
+//-----------------------------------------------------------------------------
+STRUCT {
+  CHAR c;
+  BracketTokenType type;
+  StreamPosition position;
 } StreamChar;
 //-----------------------------------------------------------------------------
 struct BracketVisitor;

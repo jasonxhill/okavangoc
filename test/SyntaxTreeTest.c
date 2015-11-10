@@ -3,6 +3,7 @@
 //=============================================================================
 #include "TestUtil.h"
 #include "../src/SyntaxTree.h"
+#include "../src/StringBuffer.h"
 //-----------------------------------------------------------------------------
 static void testSyntaxTree();
 //-----------------------------------------------------------------------------
@@ -37,76 +38,77 @@ static void testSyntaxTree()
   InMemoryCharStream charStream = newInMemoryCharStream(code);
   SyntaxTree tree = newSyntaxTree(&pool, &charStream.stream);
 
-  string result = bracketToString(&pool, tree.root);
-  result = joinStrings(&pool, "\n", result);
-  result = joinStrings(&pool, result, "\n");
+  StringBuffer sb = newStringBuffer(&pool, "\n");
+  string result = sb.append(&sb, bracketToString(&pool, tree.root))
+                    .append(&sb, "\n")
+                    .toString(&sb, &pool);
 
   assertEquals(string,
     "\n"
-    "START_BRACKET(fileBracket)\n"
+    "START_BRACKET(fileBracket) 1:0\n"
     "START_STATEMENT\n"
     "statement A\n"
     "END_STATEMENT\n"
     "START_STATEMENT\n"
     "\n\n"
-    "START_BRACKET(curlyBrace)\n"
+    "START_BRACKET(curlyBrace) 2:1\n"
     "START_STATEMENT\n"
     "\n  \n"
-    "START_BRACKET(singleLineComment)\n"
+    "START_BRACKET(singleLineComment) 3:3\n"
     "// A test comment\n\n"
-    "END_BRACKET(singleLineComment)\n"
+    "END_BRACKET(singleLineComment) 4:0\n"
     "  statement B\n"
     "END_STATEMENT\n"
     "START_STATEMENT\n"
     "\n  statement C\n"
-    "START_BRACKET(squareBracket)\n"
+    "START_BRACKET(squareBracket) 5:14\n"
     "START_STATEMENT\n"
     "1\n"
     "END_STATEMENT\n"
-    "END_BRACKET(squareBracket)\n"
+    "END_BRACKET(squareBracket) 5:16\n"
     "END_STATEMENT\n"
     "START_STATEMENT\n"
     "\n  \n"
-    "START_BRACKET(multiLineComment)\n"
+    "START_BRACKET(multiLineComment) 6:3\n"
     "/*\n"
     "    multiline comment\n"
     "  */\n"
-    "END_BRACKET(multiLineComment)\n"
+    "END_BRACKET(multiLineComment) 8:4\n"
     "\n  statement D\n"
-    "START_BRACKET(parentheses)\n"
+    "START_BRACKET(parentheses) 9:14\n"
     "START_STATEMENT\n"
     "r,x\n"
     "END_STATEMENT\n"
-    "END_BRACKET(parentheses)\n"
+    "END_BRACKET(parentheses) 9:18\n"
      " + 20\n"
     "END_STATEMENT\n"
     "START_STATEMENT\n"
     "\n  \n"
-    "START_BRACKET(doubleQuote)\n"
+    "START_BRACKET(doubleQuote) 10:3\n"
     "\"A test string\"\n"
-    "END_BRACKET(doubleQuote)\n"
+    "END_BRACKET(doubleQuote) 10:17\n"
     "END_STATEMENT\n"
     "START_STATEMENT\n"
     "\n  \n"
-    "START_BRACKET(singleQuote)\n"
+    "START_BRACKET(singleQuote) 11:3\n"
     "'A test string'\n"
-    "END_BRACKET(singleQuote)\n"
+    "END_BRACKET(singleQuote) 11:17\n"
     "END_STATEMENT\n"
     "START_STATEMENT\n"
     "\n  \n"
-    "START_BRACKET(backtick)\n"
+    "START_BRACKET(backtick) 12:3\n"
     "`A test string`\n"
-    "END_BRACKET(backtick)\n"
+    "END_BRACKET(backtick) 12:17\n"
     "END_STATEMENT\n"
     "START_STATEMENT\n"
     "\n\n"
     "END_STATEMENT\n"
-    "END_BRACKET(curlyBrace)\n"
+    "END_BRACKET(curlyBrace) 13:1\n"
     "END_STATEMENT\n"
     "START_STATEMENT\n"
     "\n\n"
     "END_STATEMENT\n"
-    "END_BRACKET(fileBracket)\n",
+    "END_BRACKET(fileBracket) 14:0\n",
     result);
 
   pool.drain(&pool);
@@ -114,39 +116,43 @@ static void testSyntaxTree()
 //-----------------------------------------------------------------------------
 static string bracketToString(MemoryPool* const pool, Bracket* const bracket)
 {
-  string str = "START_BRACKET(";
-  str = joinStrings(pool, str, bracketTokenTypeToString(bracket->statementComponent.type));
-  str = joinStrings(pool, str, ")\n");
+  StringBuffer sb = newStringBuffer(pool, "START_BRACKET(");
+
+  sb.append(&sb, bracketTokenTypeToString(bracket->super.super.type))
+    .append(&sb, ") ")
+    .append(&sb, intToString(pool, bracket->super.super.startPosition.line))
+    .append(&sb, ":")
+    .append(&sb, intToString(pool, bracket->super.super.startPosition.linePosition))
+    .append(&sb, "\n");
 
   for(Statement** s = bracket->statements; *s != NULL; s++)
-    str = joinStrings(pool, str, statementToString(pool, *s));
+    sb.append(&sb, statementToString(pool, *s));
 
-  if(bracket->statementComponent.value != NULL)
-  {
-    str = joinStrings(pool, str, bracket->statementComponent.value);
-    str = joinStrings(pool, str, "\n");
-  }
+  if(bracket->super.value != NULL)
+    sb.append(&sb, bracket->super.value).append(&sb, "\n");
 
-  str = joinStrings(pool, str, "END_BRACKET(");
-  str = joinStrings(pool, str, bracketTokenTypeToString(bracket->statementComponent.type));
-  str = joinStrings(pool, str, ")");
-  return str;
+  sb.append(&sb, "END_BRACKET(")
+    .append(&sb, bracketTokenTypeToString(bracket->super.super.type))
+    .append(&sb, ") ")
+    .append(&sb, intToString(pool, bracket->super.super.endPosition.line))
+    .append(&sb, ":")
+    .append(&sb, intToString(pool, bracket->super.super.endPosition.linePosition));
+
+  return sb.toString(&sb, pool);
 }
 //-----------------------------------------------------------------------------
 static string statementToString(MemoryPool* const pool, Statement* const statement)
 {
-  string str = "";
-  str = joinStrings(pool, str, "START_STATEMENT\n");
+  StringBuffer sb = newStringBuffer(pool, "START_STATEMENT\n");
 
   for(StatementComponent** s = statement->components; *s != NULL; s++)
   {
-    string component = (*s)->type == token? (*s)->value : bracketToString(pool, (Bracket*) *s);
-    str = joinStrings(pool, str, component);
-    str = joinStrings(pool, str, "\n");
+    string component = (*s)->super.type == token? (*s)->value : bracketToString(pool, (Bracket*) *s);
+    sb.append(&sb, component).append(&sb, "\n");
   }
 
-  str = joinStrings(pool, str, "END_STATEMENT\n");
-  return str;
+  sb.append(&sb, "END_STATEMENT\n");
+  return sb.toString(&sb, pool);
 }
 //-----------------------------------------------------------------------------
 #define CASE(VAR) case VAR: return #VAR;
