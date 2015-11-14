@@ -15,6 +15,8 @@ STRUCT SyntaxTreeStackFrame {
   Bracket* bracket;
   Statement* statement;
   StringBuffer token;
+  StreamPosition tokenStart;
+  StreamPosition tokenEnd;
 } SyntaxTreeStackFrame;
 //-----------------------------------------------------------------------------
 STRUCT {
@@ -35,8 +37,8 @@ SyntaxTree newSyntaxTree(MemoryPool* const treePool, CharStream* const charStrea
     .pool = newMemoryPool()
   };
 
-  firstStackFrame.list = newLinkedList(&firstStackFrame.pool),
-      firstStackFrame.token = newStringBuffer(&firstStackFrame.pool, "");
+  firstStackFrame.list = newLinkedList(&firstStackFrame.pool);
+  firstStackFrame.token = newStringBuffer(&firstStackFrame.pool, "");
 
   SyntaxTreeVisitor visitor = {
     .bracketVisitor = {
@@ -86,6 +88,7 @@ static void visitBracketStart(SyntaxTreeVisitor* const visitor, const StreamChar
     {
       stackFrame->parent->list.append(&stackFrame->parent->list, newToken(visitor, stackFrame->parent));
       stackFrame->parent->token = newStringBuffer(&stackFrame->parent->pool, "");
+      stackFrame->parent->tokenStart.line = 0;
     }
   }
 
@@ -126,9 +129,13 @@ static void visitBracketEndMissing(SyntaxTreeVisitor* const visitor, const Strea
   visitBracketEnd(visitor, type);
 }
 //-----------------------------------------------------------------------------
-static void visitChar(SyntaxTreeVisitor* const visitor, const StreamChar streamChar)
+static void visitChar(SyntaxTreeVisitor* const visitor, const StreamChar sc)
 {
-  visitor->stackFrame->token.appendChar(&visitor->stackFrame->token, streamChar.c);
+  visitor->stackFrame->token.appendChar(&visitor->stackFrame->token, sc.c);
+  visitor->stackFrame->tokenEnd = sc.position;
+
+  if(visitor->stackFrame->tokenStart.line == 0)
+    visitor->stackFrame->tokenStart = sc.position;
 }
 //-----------------------------------------------------------------------------
 static Token* newToken(SyntaxTreeVisitor* const visitor, SyntaxTreeStackFrame* const stackFrame)
@@ -137,6 +144,8 @@ static Token* newToken(SyntaxTreeVisitor* const visitor, SyntaxTreeStackFrame* c
   t->super.super.type = token;
   t->super.parent = stackFrame->parent->statement;
   t->super.value = stackFrame->token.toString(&stackFrame->token, visitor->pool);
+  t->super.super.startPosition = stackFrame->tokenStart;
+  t->super.super.endPosition = stackFrame->tokenEnd;
   return t;
 }
 //-----------------------------------------------------------------------------
