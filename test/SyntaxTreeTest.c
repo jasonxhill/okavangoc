@@ -64,7 +64,7 @@ static void testSyntaxTree()
     "START_BRACKET(squareBracket) 5:14\n"
     "START_STATEMENT 5:15\n"
     "1\t5:15 - 5:15\n"
-    "END_STATEMENT 5:16\n"
+    "END_STATEMENT NO_END_TOKEN 5:16\n"
     "END_BRACKET(squareBracket) 5:16\n"
     "END_STATEMENT 5:17\n"
     "START_STATEMENT 6:0\n"
@@ -78,7 +78,7 @@ static void testSyntaxTree()
     "START_BRACKET(parentheses) 9:14\n"
     "START_STATEMENT 9:15\n"
     "r,x\t9:15 - 9:17\n"
-    "END_STATEMENT 9:18\n"
+    "END_STATEMENT NO_END_TOKEN 9:18\n"
     "END_BRACKET(parentheses) 9:18\n"
      " + 20\t9:19 - 9:23\n"
     "END_STATEMENT 9:24\n"
@@ -102,12 +102,12 @@ static void testSyntaxTree()
     "END_STATEMENT 12:18\n"
     "START_STATEMENT 13:0\n"
     "\n\t13:0 - 13:0\n"
-    "END_STATEMENT 13:1\n"
+    "END_STATEMENT NO_END_TOKEN 13:1\n"
     "END_BRACKET(curlyBrace) 13:1\n"
     "END_STATEMENT 13:2\n"
     "START_STATEMENT 14:0\n"
     "\n\t14:0 - 14:0\n"
-    "END_STATEMENT 14:0\n"
+    "END_STATEMENT NO_END_TOKEN 14:0\n"
     "END_BRACKET(fileBracket) 14:0\n",
     result);
 
@@ -133,6 +133,7 @@ static string bracketToString(MemoryPool* const pool, Bracket* const bracket)
 
   sb.append(&sb, "END_BRACKET(")
     .append(&sb, bracketTokenTypeToString(bracket->super.super.type))
+    .append(&sb, bracket->super.super.endTokenMissing? " NO_END_TOKEN" : "")
     .append(&sb, ") ")
     .append(&sb, intToString(pool, bracket->super.super.endPosition.line))
     .append(&sb, ":")
@@ -165,6 +166,7 @@ static string statementToString(MemoryPool* const pool, Statement* const stateme
         .append(&sb, "\n");
 
   sb.append(&sb, "END_STATEMENT ")
+    .append(&sb, statement->super.endTokenMissing? "NO_END_TOKEN " : "")
     .append(&sb, intToString(pool, statement->super.endPosition.line))
     .append(&sb, ":")
     .append(&sb, intToString(pool, statement->super.endPosition.linePosition))
